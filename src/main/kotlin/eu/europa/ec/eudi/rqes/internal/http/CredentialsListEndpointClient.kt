@@ -114,7 +114,7 @@ internal class CredentialKeyTO(
     companion object {
         fun CredentialKeyTO.toDomain(): CredentialKey = CredentialKey(
             status = toCredentialKeyStatus(status),
-            supportedAlgorithms = algo.map { AlgorithmOID(it) },
+            supportedAlgorithms = algo.map { SigningAlgorithmOID(it) },
             length = length,
             curve = curve,
         )
@@ -250,7 +250,7 @@ internal class CredentialsListEndpointClient(
     suspend fun listCredentials(request: CredentialsListRequest, accessToken: AccessToken): Result<CredentialsListTO> =
         runCatching {
             ktorHttpClientFactory().use { client ->
-                val response = client.post(credentialsListEndpoint) {
+                val response = client.post("$credentialsListEndpoint/credentials/list") {
                     bearerAuth(accessToken.accessToken)
                     contentType(ContentType.Application.Json)
                     setBody(CredentialsListRequestTO.from(request))

@@ -74,8 +74,9 @@ class AuthorizeServiceTest {
         val cscClient = CSCClient.oauth2(
             rsspMetadata = rsspMetadata(),
             cscClientConfig = CSCClientConfig(
-                client = OAuth2Client.Public("client-id"),
-                authFlowRedirectionURI = URI("https://example.com/redirect"),
+                OAuth2Client.Public("client-id"),
+                URI("https://example.com/redirect"),
+                URI("https://walletcentric.signer.eudiw.dev").toURL(),
                 parUsage = ParUsage.Never,
             ),
             ktorHttpClientFactory = mockedKtorHttpClientFactory,
@@ -157,6 +158,7 @@ class AuthorizeServiceTest {
             cscClientConfig = CSCClientConfig(
                 client = OAuth2Client.Public("client-id"),
                 authFlowRedirectionURI = URI("https://example.com/redirect"),
+                URI("https://walletcentric.signer.eudiw.dev").toURL(),
                 parUsage = ParUsage.Required,
             ),
             ktorHttpClientFactory = mockedKtorHttpClientFactory,
@@ -210,6 +212,7 @@ class AuthorizeServiceTest {
             cscClientConfig = CSCClientConfig(
                 client = OAuth2Client.Confidential.PasswordProtected("client-id", "client-secret"),
                 authFlowRedirectionURI = URI("https://example.com/redirect"),
+                URI("https://walletcentric.signer.eudiw.dev").toURL(),
                 parUsage = ParUsage.Required,
             ),
             ktorHttpClientFactory = mockedKtorHttpClientFactory,
@@ -248,6 +251,7 @@ class AuthorizeServiceTest {
                 cscClientConfig = CSCClientConfig(
                     client = OAuth2Client.Public("client-id"),
                     authFlowRedirectionURI = URI("https://example.com/redirect"),
+                    URI("https://walletcentric.signer.eudiw.dev").toURL(),
                     parUsage = ParUsage.Required,
                 ),
                 ktorHttpClientFactory = mockedKtorHttpClientFactory,

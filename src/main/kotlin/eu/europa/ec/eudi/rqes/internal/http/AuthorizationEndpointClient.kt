@@ -22,14 +22,12 @@ import com.nimbusds.oauth2.sdk.id.ClientID
 import com.nimbusds.oauth2.sdk.id.State
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier
+import com.nimbusds.oauth2.sdk.rar.AuthorizationDetail
+import com.nimbusds.oauth2.sdk.rar.AuthorizationType
 import com.nimbusds.openid.connect.sdk.Prompt
-import eu.europa.ec.eudi.rqes.CSCClientConfig
-import eu.europa.ec.eudi.rqes.HttpsUrl
-import eu.europa.ec.eudi.rqes.KtorHttpClientFactory
-import eu.europa.ec.eudi.rqes.PKCEVerifier
-import eu.europa.ec.eudi.rqes.ParUsage
-import eu.europa.ec.eudi.rqes.RQESError
+import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.Scope
+import eu.europa.ec.eudi.rqes.internal.toNimbusAuthDetail
 import io.ktor.client.call.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -78,6 +76,7 @@ internal class AuthorizationEndpointClient(
 
     suspend fun submitParOrCreateAuthorizationRequestUrl(
         scopes: List<Scope>,
+        authorizationDetails: AuthorizationDetails? = null,
         state: String,
     ): Result<Pair<PKCEVerifier, HttpsUrl>> {
         val usePar = when (cscClientConfig.parUsage) {
@@ -91,14 +90,15 @@ internal class AuthorizationEndpointClient(
             }
         }
         return if (usePar) {
-            submitPushedAuthorizationRequest(scopes, state)
+            submitPushedAuthorizationRequest(scopes, authorizationDetails, state)
         } else {
-            authorizationRequestUrl(scopes, state)
+            authorizationRequestUrl(scopes, authorizationDetails, state)
         }
     }
 
     private suspend fun submitPushedAuthorizationRequest(
         scopes: List<Scope>,
+        authorizationDetails: AuthorizationDetails?,
         state: String,
     ): Result<Pair<PKCEVerifier, HttpsUrl>> = runCatching {
         require(scopes.isNotEmpty()) {
@@ -116,6 +116,11 @@ internal class AuthorizationEndpointClient(
                 state(State(state))
                 if (scopes.isNotEmpty()) {
                     scope(NimbusScope(*scopes.map { it.value }.toTypedArray()))
+                }
+                authorizationDetails?.let {
+                    AuthorizationDetail.Builder(AuthorizationType(Scope.Credential.value)).apply {
+                        it.toNimbusAuthDetail()
+                    }
                 }
                 prompt(Prompt.Type.LOGIN)
             }.build()
@@ -172,9 +177,10 @@ internal class AuthorizationEndpointClient(
 
     private fun authorizationRequestUrl(
         credentialsScopes: List<Scope>,
+        authorizationDetails: AuthorizationDetails?,
         state: String,
     ): Result<Pair<PKCEVerifier, HttpsUrl>> = runCatching {
-        require(credentialsScopes.isNotEmpty()) {
+        require(credentialsScopes.isNotEmpty() || authorizationDetails != null) {
             "No scopes or authorization details provided. Cannot prepare authorization request."
         }
 
@@ -187,11 +193,12 @@ internal class AuthorizationEndpointClient(
             state(State(state))
             if (credentialsScopes.isNotEmpty()) {
                 scope(NimbusScope(*credentialsScopes.map { it.value }.toTypedArray()))
-//                if (!isCredentialIssuerAuthorizationServer) {
-//                    resource(credentialIssuerId.value.value.toURI())
-//                }
             }
-
+            authorizationDetails?.let {
+                AuthorizationDetail.Builder(AuthorizationType(Scope.Credential.value)).apply {
+                    it.toNimbusAuthDetail()
+                }
+            }
             prompt(Prompt.Type.LOGIN)
         }.build()
 

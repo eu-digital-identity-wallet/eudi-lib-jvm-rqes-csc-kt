@@ -15,28 +15,97 @@
  */
 package eu.europa.ec.eudi.rqes.internal
 
+import com.nimbusds.oauth2.sdk.id.State
 import eu.europa.ec.eudi.rqes.*
+import eu.europa.ec.eudi.rqes.AuthorizationError.InvalidAuthorizationState
+import eu.europa.ec.eudi.rqes.internal.http.AuthorizationEndpointClient
+import eu.europa.ec.eudi.rqes.internal.http.SCACalculateHashEndpointClient
+import eu.europa.ec.eudi.rqes.internal.http.TokenEndpointClient
 
-internal class AuthorizeCredentialImpl : AuthorizeCredential {
+internal class AuthorizeCredentialImpl(
+    private val authorizationEndpointClient: AuthorizationEndpointClient?,
+    private val tokenEndpointClient: TokenEndpointClient,
+    private val scaCalculateHashEndpointClient: SCACalculateHashEndpointClient?,
+) : AuthorizeCredential {
 
     override suspend fun ServiceAccessAuthorized.prepareCredentialAuthorizationRequest(
         credential: CredentialInfo,
-        documentList: DocumentList?,
+        documents: List<DocumentToSign>?,
         numSignatures: Int?,
         walletState: String?,
-    ): Result<CredentialAuthorizationRequestPrepared> {
+    ): Result<CredentialAuthorizationRequestPrepared> = runCatching {
+        checkNotNull(authorizationEndpointClient)
+
+        var documentDigestList: DocumentDigestList? = null
         if (credential.scal == SCAL.Two) {
-            requireNotNull(documentList) {
-                "Document list is required for SCAL 2"
+            requireNotNull(documents) {
+                "Documents are required for SCAL 2"
             }
+            requireNotNull(scaCalculateHashEndpointClient) {
+                "SCA Calculate Hash Endpoint Client is required for SCAL 2"
+            }
+
+            documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA256RSA)
         }
-        TODO("Not yet implemented")
+
+        val scopes = listOf(Scope(Scope.Credential.value))
+        val state = walletState ?: State().value
+        val (codeVerifier, authorizationCodeUrl) = authorizationEndpointClient.submitParOrCreateAuthorizationRequestUrl(
+            scopes,
+            AuthorizationDetails(
+                CredentialRef.ByCredentialID(credential.credentialID),
+                numSignatures,
+                documentDigestList,
+            ),
+            state,
+        ).getOrThrow()
+        CredentialAuthorizationRequestPrepared(
+            AuthorizationRequestPrepared(authorizationCodeUrl, codeVerifier, state),
+            credential,
+            documentDigestList,
+        )
+    }
+
+    private suspend fun calculateDocumentHash(
+        documents: List<DocumentToSign>,
+        credential: CredentialInfo,
+        hashAlgorithmOID: HashAlgorithmOID,
+    ): DocumentDigestList {
+        requireNotNull(scaCalculateHashEndpointClient) {
+            "SCA Calculate Hash Endpoint Client is required hash calculation"
+        }
+        val hashes = scaCalculateHashEndpointClient.calculateHash(documents, credential.certificate, hashAlgorithmOID)
+        documents.zip(hashes.hashes).map {
+            DocumentDigest(Digest(it.second), it.first.file.label)
+        }.let {
+            return DocumentDigestList(it, hashAlgorithmOID)
+        }
     }
 
     override suspend fun CredentialAuthorizationRequestPrepared.authorizeWithAuthorizationCode(
         authorizationCode: AuthorizationCode,
         serverState: String,
-    ): Result<CredentialAuthorized> {
-        TODO("Not yet implemented")
+    ): Result<CredentialAuthorized> = runCatching {
+        ensure(serverState == value.state) { InvalidAuthorizationState() }
+        val tokenResponse = tokenEndpointClient.requestAccessTokenAuthFlow(authorizationCode, value.pkceVerifier)
+        val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
+
+        if (credential.scal == SCAL.One) {
+            CredentialAuthorized.SCAL1(
+                OAuth2Tokens(accessToken, refreshToken, timestamp),
+                credential.credentialID,
+                credential.certificate,
+            )
+        } else {
+            requireNotNull(documentDigestList) {
+                "Document list is required for SCAL 2"
+            }
+            CredentialAuthorized.SCAL2(
+                OAuth2Tokens(accessToken, refreshToken, timestamp),
+                credential.credentialID,
+                credential.certificate,
+                documentDigestList,
+            )
+        }
     }
 }

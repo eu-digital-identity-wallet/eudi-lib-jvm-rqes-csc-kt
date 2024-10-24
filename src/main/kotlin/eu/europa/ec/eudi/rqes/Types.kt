@@ -16,6 +16,7 @@
 package eu.europa.ec.eudi.rqes
 
 import com.nimbusds.oauth2.sdk.`as`.ReadOnlyAuthorizationServerMetadata
+import java.io.InputStream
 import java.net.URI
 import java.net.URL
 import java.time.Duration
@@ -66,7 +67,30 @@ value class HashAlgorithmOID(val value: String) {
     }
 }
 
-data class DocumentList(
+@JvmInline
+value class SigningAlgorithmOID(val value: String) {
+    init {
+        require(value.isNotBlank()) { "AlgorithmOID must not be blank" }
+    }
+
+    companion object {
+        val RSA = SigningAlgorithmOID("1.2.840.113549.1.1.1")
+        val RSA_SHA256 = SigningAlgorithmOID("1.2.840.113549.1.1.11")
+        val RSA_SHA385 = SigningAlgorithmOID("1.2.840.113549.1.1.12")
+        val RSA_SHA512 = SigningAlgorithmOID("1.2.840.113549.1.1.13")
+        val ECDSA_SHA224 = SigningAlgorithmOID("1.2.840.10045.4.3.1")
+        val ECDSA_SHA256 = SigningAlgorithmOID("1.2.840.10045.4.3.2")
+        val ECDSA_SHA384 = SigningAlgorithmOID("1.2.840.10045.4.3.3")
+        val ECDSA_SHA512 = SigningAlgorithmOID("1.2.840.10045.4.3.4")
+    }
+}
+
+data class Document(
+    val content: InputStream,
+    val label: String?,
+)
+
+data class DocumentDigestList(
     val documentDigests: List<DocumentDigest>,
     val hashAlgorithmOID: HashAlgorithmOID,
 ) {
@@ -80,6 +104,46 @@ value class Digest(val value: String) {
     init {
         require(value.isNotBlank()) { "Digest must not be blank" }
     }
+}
+
+data class DocumentToSign(
+    val file: Document,
+    val signatureFormat: SignatureFormat,
+    val conformanceLevel: ConformanceLevel = ConformanceLevel.ADES_B_B,
+    val signAlgo: SigningAlgorithmOID,
+    val signedEnvelopeProperty: SignedEnvelopeProperty,
+    val asicContainer: ASICContainer,
+)
+
+enum class SignatureFormat {
+    C,
+    X,
+    P,
+    J,
+}
+
+enum class ConformanceLevel {
+    ADES_B_B,
+    ADES_B_T,
+    ADES_B_LT,
+    ADES_B_LTA,
+    ADES_B,
+    ADES_T,
+    ADES_LT,
+    ADES_LTA,
+}
+
+enum class ASICContainer {
+    NONE,
+    ASIC_S,
+    ASIC_E,
+}
+
+enum class SignedEnvelopeProperty {
+    ENVELOPED,
+    ENVELOPING,
+    DETACHED,
+    INTERNALLY_DETACHED,
 }
 
 @JvmInline
@@ -207,6 +271,11 @@ value class Scope(val value: String) {
     init {
         require(value.isNotEmpty()) { "Scope value cannot be empty" }
     }
+
+    companion object {
+        val Service = Scope("service")
+        val Credential = Scope("credential")
+    }
 }
 
 @JvmInline
@@ -225,10 +294,23 @@ data class PKCEVerifier(
     }
 }
 
-data class AuthorizationDetails(
+internal data class AuthorizationDetails(
     val credentialRef: CredentialRef,
-    val numSignatures: Int,
-    val documentDigests: List<DocumentDigest>,
-    val hashAlgorithmOID: HashAlgorithmOID,
+    val numSignatures: Int? = 1,
+    val documentDigestList: DocumentDigestList?,
     val locations: List<String>? = emptyList(),
 )
+
+@JvmInline
+value class SignaturesList(val signatures: List<Signature>) {
+    init {
+        require(signatures.isNotEmpty()) { "Signatures list must not be empty" }
+    }
+}
+
+@JvmInline
+value class Signature(val value: String) {
+    init {
+        require(value.isNotEmpty()) { "Signature value must not be empty" }
+    }
+}

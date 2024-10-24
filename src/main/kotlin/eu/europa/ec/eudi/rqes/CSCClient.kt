@@ -17,17 +17,21 @@ package eu.europa.ec.eudi.rqes
 
 import eu.europa.ec.eudi.rqes.internal.AuthorizeCredentialImpl
 import eu.europa.ec.eudi.rqes.internal.AuthorizeServiceImpl
+import eu.europa.ec.eudi.rqes.internal.SignDocImpl
 import eu.europa.ec.eudi.rqes.internal.SignHashImpl
+import eu.europa.ec.eudi.rqes.internal.http.*
 import eu.europa.ec.eudi.rqes.internal.http.AuthorizationEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.CredentialsListEndpointClient
+import eu.europa.ec.eudi.rqes.internal.http.SCACalculateHashEndpointClient
+import eu.europa.ec.eudi.rqes.internal.http.SCAObtainSignedDocEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.TokenEndpointClient
-import java.net.URI
 
 interface CSCClient :
     AuthorizeService,
     AuthorizeCredential,
     ListCredentials,
-    SignHash {
+    SignHash,
+    SignDoc {
 
     val rsspMetadata: RSSPMetadata
 
@@ -76,24 +80,53 @@ interface CSCClient :
                 tokenEndpointClient,
             )
 
-            val authorizeCredentialImpl = AuthorizeCredentialImpl()
+            val scaCalculateHashEndpointClient =
+                SCACalculateHashEndpointClient(
+                    cscClientConfig.scaBaseURL,
+                    ktorHttpClientFactory,
+                )
+
+            val authorizeCredentialImpl = AuthorizeCredentialImpl(
+                authorizationEndpointClient,
+                tokenEndpointClient,
+                scaCalculateHashEndpointClient,
+            )
 
             val credentialsListEndpointClient =
                 CredentialsListEndpointClient(
-                    URI("${rsspMetadata.rsspId}/credentials/list").toURL(),
+                    rsspMetadata.rsspId.value.value,
                     ktorHttpClientFactory,
                 )
 
             val listCredentialsImpl = ListCredentials(credentialsListEndpointClient)
 
-            val signHashImpl = SignHashImpl()
+            val signHashEndpointClient = SignHashEndpointClient(
+                rsspMetadata.rsspId.value.value,
+                ktorHttpClientFactory,
+            )
+
+            val signHashImpl = SignHashImpl(
+                signHashEndpointClient,
+            )
+
+            val scaObtainSignedDocEndpointClient =
+                SCAObtainSignedDocEndpointClient(
+                    cscClientConfig.scaBaseURL,
+                    ktorHttpClientFactory,
+                )
+
+            val signDocImpl = SignDocImpl(
+                signHashEndpointClient,
+                scaObtainSignedDocEndpointClient,
+            )
 
             object :
                 CSCClient,
                 AuthorizeService by authorizeServiceImpl,
                 AuthorizeCredential by authorizeCredentialImpl,
                 ListCredentials by listCredentialsImpl,
-                SignHash by signHashImpl {
+                SignHash by signHashImpl,
+                SignDoc by signDocImpl {
                 override val rsspMetadata: RSSPMetadata = rsspMetadata
             }
         }

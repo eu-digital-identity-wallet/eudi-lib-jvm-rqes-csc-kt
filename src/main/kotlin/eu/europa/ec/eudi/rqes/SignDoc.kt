@@ -15,12 +15,32 @@
  */
 package eu.europa.ec.eudi.rqes
 
-interface SignHash {
+import java.time.Clock
 
-    suspend fun CredentialAuthorized.SCAL1.signHash(
+data class SignDocResponse(
+    val documentWithSignature: List<String>,
+    val signatureObject: List<String>,
+    val validationInfo: ValidationInfo?,
+)
+
+data class ValidationInfo(
+    val ocsp: List<String>,
+    val crl: List<String>,
+    val certificate: List<String>,
+)
+
+interface SignDoc {
+
+    suspend fun CredentialAuthorized.SCAL1.signDoc(
+        documents: List<DocumentToSign>,
         documentDigestList: DocumentDigestList,
         signingAlgorithmOID: SigningAlgorithmOID,
-    ): Result<SignaturesList>
+        signatureTimestamp: Clock,
+    ): Result<SignDocResponse>
 
-    suspend fun CredentialAuthorized.SCAL2.signHash(signingAlgorithmOID: SigningAlgorithmOID): Result<SignaturesList>
+    suspend fun CredentialAuthorized.SCAL2.signDoc(
+        documents: List<DocumentToSign>,
+        signingAlgorithmOID: SigningAlgorithmOID,
+        signatureTimestamp: Clock,
+    ): Result<SignDocResponse>
 }

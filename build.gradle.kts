@@ -28,6 +28,7 @@ repositories {
 dependencies {
     api(libs.nimbus.oauth2.oidc.sdk)
     api(libs.ktor.client.core)
+    api(libs.ktor.client.auth)
     api(libs.ktor.client.content.negotiation)
     api(libs.ktor.client.serialization)
     api(libs.ktor.serialization.kotlinx.json)

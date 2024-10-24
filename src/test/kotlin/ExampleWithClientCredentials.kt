@@ -20,6 +20,8 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
+import java.io.File
+import java.io.FileInputStream
 import java.net.URI
 import java.security.cert.X509Certificate
 import java.util.*
@@ -67,6 +69,7 @@ private val unsafeHttpClientFactory: KtorHttpClientFactory = {
 private var cscClientConfig = CSCClientConfig(
     OAuth2Client.Confidential.PasswordProtected("wallet-private", "8aEtqVYjtvmvGPSpbxOyjhiOAC285pdE"),
     URI("https://localhost:3000/api/callback"),
+    URI("https://walletcentric.signer.eudiw.dev").toURL(),
     ParUsage.IfSupported,
 )
 
@@ -94,14 +97,22 @@ fun main() {
                 listCredentials(CredentialsListRequest()).getOrThrow().also { println(it) }
             }
 
-            val documents = DocumentList(
-                listOf(DocumentDigest(Digest("sdfhklyu2348ojfsd"), "My loan contract")),
-                HashAlgorithmOID.SHA256RSA,
+            val document = Document(
+                FileInputStream(File(ClassLoader.getSystemResource("sample.pdf").path)),
+                "sample pdf",
+            )
+            val documentToSign = DocumentToSign(
+                document,
+                SignatureFormat.P,
+                ConformanceLevel.ADES_B_B,
+                SigningAlgorithmOID.ECDSA_SHA256,
+                SignedEnvelopeProperty.ENVELOPED,
+                ASICContainer.NONE,
             )
 
             // initiate the credential authorization request flow
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
-                prepareCredentialAuthorizationRequest(credentials.first(), documents).getOrThrow()
+                prepareCredentialAuthorizationRequest(credentials.first(), listOf(documentToSign)).getOrThrow()
             }
 
             println("Use the following URL to authenticate:")
@@ -123,7 +134,7 @@ fun main() {
             require(credentialAuthorized is CredentialAuthorized.SCAL2) { "Expected SCAL2" }
 
             val signatures = with(credentialAuthorized) {
-                signHash(AlgorithmOID.ECDSA_SHA256).getOrThrow()
+                signHash(SigningAlgorithmOID.ECDSA_SHA256).getOrThrow()
             }
 
             println("Signatures: $signatures")

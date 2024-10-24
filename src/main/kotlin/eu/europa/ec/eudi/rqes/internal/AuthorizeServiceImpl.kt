@@ -36,11 +36,11 @@ internal class AuthorizeServiceImpl(
     override suspend fun prepareServiceAuthorizationRequest(walletState: String?): Result<ServiceAuthorizationRequestPrepared> =
         runCatching {
             checkNotNull(authorizationEndpointClient)
-            val scopes = listOf(Scope("service"))
+            val scopes = listOf(Scope(Scope.Service.value))
             val state = walletState ?: NimbusState().value
             val (codeVerifier, authorizationCodeUrl) = authorizationEndpointClient.submitParOrCreateAuthorizationRequestUrl(
-                scopes,
-                state,
+                scopes = scopes,
+                state = state,
             ).getOrThrow()
             ServiceAuthorizationRequestPrepared(authorizationCodeUrl, codeVerifier, state)
         }
@@ -57,7 +57,7 @@ internal class AuthorizeServiceImpl(
         }
 
     override suspend fun authorizeWithClientCredentials(): Result<ServiceAccessAuthorized> = runCatching {
-        val tokenResponse = tokenEndpointClient.requestAccessTokenClientCredentialsFlow(Scope("service"))
+        val tokenResponse = tokenEndpointClient.requestAccessTokenClientCredentialsFlow(Scope.Service)
         val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
         ServiceAccessAuthorized(OAuth2Tokens(accessToken, refreshToken, timestamp))
     }

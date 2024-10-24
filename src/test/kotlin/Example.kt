@@ -16,16 +16,25 @@
 import eu.europa.ec.eudi.rqes.*
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
+import java.io.File
+import java.io.FileInputStream
 import java.net.URI
 import java.security.cert.X509Certificate
+import java.time.Clock
 import java.util.*
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+
+val client_id = "wallet-client-tester"
+val client_secret = "somesecrettester2"
 
 private fun getUnsafeOkHttpClient(): OkHttpClient {
     // Create a trust manager that does not validate certificate chains
@@ -57,6 +66,17 @@ private val unsafeHttpClientFactory: KtorHttpClientFactory = {
                 json = JsonSupport,
             )
         }
+        install(Auth) {
+            basic {
+                credentials {
+                    BasicAuthCredentials(username = client_id, password = client_secret)
+                }
+                realm = "Access to the '/' path"
+            }
+        }
+        install(Logging) {
+            level = LogLevel.ALL
+        }
 
         engine {
             preconfigured = getUnsafeOkHttpClient()
@@ -65,39 +85,38 @@ private val unsafeHttpClientFactory: KtorHttpClientFactory = {
 }
 
 private var cscClientConfig = CSCClientConfig(
-    OAuth2Client.Public("wallet"),
-    URI("https://localhost:3000/api/callback"),
+    OAuth2Client.Confidential.PasswordProtected(client_id, client_secret),
+    URI("https://oauthdebugger.com/debug"),
+    URI("https://walletcentric.signer.eudiw.dev").toURL(),
     ParUsage.IfSupported,
 )
 
 fun main() {
     runBlocking {
-        val rssp = RSSPId("https://localhost:3000/api/csc/v2").getOrThrow()
-
         // create the CSC client
         val cscClient: CSCClient = CSCClient.oauth2(
             cscClientConfig,
-            "https://localhost:3000/api/csc/v2",
+            "https://walletcentric.signer.eudiw.dev/csc/v2",
             unsafeHttpClientFactory,
         ).getOrThrow()
 
         val rsspMetadata = cscClient.rsspMetadata
 
         with(cscClient) {
-            val serverState = UUID.randomUUID().toString()
+            val walletState = UUID.randomUUID().toString()
 
             // initiate the service authorization request
-            val serviceAuthRequestPrepared = prepareServiceAuthorizationRequest(serverState).getOrThrow()
+            val serviceAuthRequestPrepared = prepareServiceAuthorizationRequest(walletState).getOrThrow()
 
-            println("Use the following URL to authenticate: \n ${serviceAuthRequestPrepared.value.authorizationCodeURL}")
+            println("Use the following URL to authenticate:\n${serviceAuthRequestPrepared.value.authorizationCodeURL}")
 
             println("Enter the authorization code:")
-            val serviceAuthorizationCode = AuthorizationCode(readlnOrNull()!!)
+            val serviceAuthorizationCode = AuthorizationCode(readln())
 
             val authorizedServiceRequest = with(serviceAuthRequestPrepared) {
                 // provide the authorization code to the client
-                authorizeWithAuthorizationCode(serviceAuthorizationCode, serverState).getOrThrow()
-                    .also { println("Access token: \n $it") }
+                authorizeWithAuthorizationCode(serviceAuthorizationCode, walletState).getOrThrow()
+                    .also { println("Access token:\n${it.tokens.accessToken.accessToken}") }
             }
 
             // retrieve the credentials from the RSSP
@@ -105,39 +124,49 @@ fun main() {
                 listCredentials(CredentialsListRequest(certificates = Certificates.Chain)).getOrThrow()
             }
 
-            val documents = DocumentList(
-                listOf(DocumentDigest(Digest("sdfhklyu2348ojfsd"), "My loan contract")),
-                HashAlgorithmOID.SHA256RSA,
+            val document = Document(
+                FileInputStream(File(ClassLoader.getSystemResource("sample.pdf").path)),
+                "sample pdf",
+            )
+            val documentToSign = DocumentToSign(
+                document,
+                SignatureFormat.P,
+                ConformanceLevel.ADES_B_B,
+                SigningAlgorithmOID.ECDSA_SHA256,
+                SignedEnvelopeProperty.ENVELOPED,
+                ASICContainer.NONE,
             )
 
             // initiate the credential authorization request flow
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
-                prepareCredentialAuthorizationRequest(credentials.first(), documents).getOrThrow()
+                prepareCredentialAuthorizationRequest(credentials.first(), listOf(documentToSign)).getOrThrow()
             }
 
-            println("Use the following URL to authenticate:")
-            println(credAuthRequestPrepared.value.authorizationCodeURL)
+            println("Use the following URL to authenticate:\n${credAuthRequestPrepared.value.authorizationCodeURL}")
 
-            val credentialAuthorizationCode = AuthorizationCode(readlnOrNull()!!)
+            val credentialAuthorizationCode = AuthorizationCode(readln())
 
             // provide the credential authorization code to the CSC client
             val credentialAuthorized = with(credAuthRequestPrepared) {
                 authorizeWithAuthorizationCode(
                     credentialAuthorizationCode,
-                    serverState,
+                    walletState,
                 ).getOrThrow()
             }
 
-            println("Authorized credential request:")
-            println(credentialAuthorized)
+            println("Authorized credential request:\n$credentialAuthorized")
 
             require(credentialAuthorized is CredentialAuthorized.SCAL2) { "Expected SCAL2" }
 
-            val signatures = with(credentialAuthorized) {
-                signHash(AlgorithmOID.ECDSA_SHA256).getOrThrow()
-            }
+//            val signatures = with(credentialAuthorized) {
+//                signHash(SigningAlgorithmOID.ECDSA_SHA256).getOrThrow()
+//            }
+//
+//            println("Signatures: $signatures")
 
-            println("Signatures: $signatures")
+            val signedDoc = with(credentialAuthorized) {
+                signDoc(listOf(documentToSign), SigningAlgorithmOID.ECDSA_SHA256, Clock.systemUTC()).getOrThrow()
+            }
         }
     }
 }
