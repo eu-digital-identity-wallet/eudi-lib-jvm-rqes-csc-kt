@@ -30,25 +30,13 @@ internal class AuthorizeCredentialImpl(
 
     override suspend fun ServiceAccessAuthorized.prepareCredentialAuthorizationRequest(
         credential: CredentialInfo,
-        documents: List<DocumentToSign>?,
+        documents: List<DocumentToSign>,
         numSignatures: Int?,
         walletState: String?,
     ): Result<CredentialAuthorizationRequestPrepared> = runCatching {
         checkNotNull(authorizationEndpointClient)
 
-        var documentDigestList: DocumentDigestList? = null
-        if (credential.scal == SCAL.Two) {
-            requireNotNull(documents) {
-                "Documents are required for SCAL 2"
-            }
-            requireNotNull(scaCalculateHashEndpointClient) {
-                "SCA Calculate Hash Endpoint Client is required for SCAL 2"
-            }
-
-            documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA_256)
-        }
-
-        documentDigestList = calculateDocumentHash(documents!!, credential, HashAlgorithmOID.SHA_256)
+        val documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA_256)
 
         val scopes = listOf(Scope(Scope.Credential.value))
         val state = walletState ?: State().value

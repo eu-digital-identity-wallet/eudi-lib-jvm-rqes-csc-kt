@@ -43,7 +43,7 @@ interface AuthorizeCredential {
      */
     suspend fun ServiceAccessAuthorized.prepareCredentialAuthorizationRequest(
         credential: CredentialInfo,
-        documents: List<DocumentToSign>?,
+        documents: List<DocumentToSign>,
         numSignatures: Int? = 1,
         walletState: String? = null,
     ): Result<CredentialAuthorizationRequestPrepared>

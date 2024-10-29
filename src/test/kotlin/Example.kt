@@ -107,14 +107,12 @@ fun main() {
             val serviceAuthRequestPrepared = prepareServiceAuthorizationRequest(walletState).getOrThrow()
 
             println("Use the following URL to authenticate:\n${serviceAuthRequestPrepared.value.authorizationCodeURL}")
-
             println("Enter the service authorization code:")
             val serviceAuthorizationCode = AuthorizationCode(readln())
 
             val authorizedServiceRequest = with(serviceAuthRequestPrepared) {
                 // provide the authorization code to the client
                 authorizeWithAuthorizationCode(serviceAuthorizationCode, walletState).getOrThrow()
-                    .also { println("Access token:\n${it.tokens.accessToken.accessToken}") }
             }
 
             // retrieve the credentials from the RSSP
@@ -147,7 +145,6 @@ fun main() {
             }
 
             println("Use the following URL to authenticate:\n${credAuthRequestPrepared.value.authorizationCodeURL}")
-
             println("Enter the credential authorization code:")
             val credentialAuthorizationCode = AuthorizationCode(readln())
 
@@ -158,8 +155,6 @@ fun main() {
                     walletState,
                 ).getOrThrow()
             }
-
-            println("Authorized credential request:\n$credentialAuthorized")
 
             val signedDoc = with(credentialAuthorized) {
                 signDoc(listOf(documentToSign), SigningAlgorithmOID.RSA).getOrThrow()
