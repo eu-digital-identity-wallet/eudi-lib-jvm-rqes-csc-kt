@@ -110,7 +110,7 @@ fun main() {
 
             println("Use the following URL to authenticate:\n${serviceAuthRequestPrepared.value.authorizationCodeURL}")
 
-            println("Enter the authorization code:")
+            println("Enter the service authorization code:")
             val serviceAuthorizationCode = AuthorizationCode(readln())
 
             val authorizedServiceRequest = with(serviceAuthRequestPrepared) {
@@ -124,26 +124,26 @@ fun main() {
                 listCredentials(CredentialsListRequest(certificates = Certificates.Chain)).getOrThrow()
             }
 
-            val document = Document(
-                FileInputStream(File(ClassLoader.getSystemResource("sample.pdf").path)),
-                "sample pdf",
-            )
             val documentToSign = DocumentToSign(
-                document,
+                Document(
+                    FileInputStream(File(ClassLoader.getSystemResource("sample.pdf").path)),
+                    "A sample pdf",
+                ),
                 SignatureFormat.P,
                 ConformanceLevel.ADES_B_B,
-                SigningAlgorithmOID.ECDSA_SHA256,
+                SigningAlgorithmOID.RSA,
                 SignedEnvelopeProperty.ENVELOPED,
                 ASICContainer.NONE,
             )
 
             // initiate the credential authorization request flow
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
-                prepareCredentialAuthorizationRequest(credentials.first(), listOf(documentToSign)).getOrThrow()
+                prepareCredentialAuthorizationRequest(credentials.first(), listOf(documentToSign), 1, walletState).getOrThrow()
             }
 
             println("Use the following URL to authenticate:\n${credAuthRequestPrepared.value.authorizationCodeURL}")
 
+            println("Enter the credential authorization code:")
             val credentialAuthorizationCode = AuthorizationCode(readln())
 
             // provide the credential authorization code to the CSC client
@@ -156,16 +156,8 @@ fun main() {
 
             println("Authorized credential request:\n$credentialAuthorized")
 
-            require(credentialAuthorized is CredentialAuthorized.SCAL2) { "Expected SCAL2" }
-
-//            val signatures = with(credentialAuthorized) {
-//                signHash(SigningAlgorithmOID.ECDSA_SHA256).getOrThrow()
-//            }
-//
-//            println("Signatures: $signatures")
-
             val signedDoc = with(credentialAuthorized) {
-                signDoc(listOf(documentToSign), SigningAlgorithmOID.ECDSA_SHA256, Clock.systemUTC()).getOrThrow()
+                signDoc(listOf(documentToSign), SigningAlgorithmOID.RSA, Clock.systemUTC()).getOrThrow()
             }
         }
     }

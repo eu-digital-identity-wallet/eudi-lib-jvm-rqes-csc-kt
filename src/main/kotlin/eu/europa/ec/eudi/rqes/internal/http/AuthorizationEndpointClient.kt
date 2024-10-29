@@ -194,11 +194,14 @@ internal class AuthorizationEndpointClient(
             if (credentialsScopes.isNotEmpty()) {
                 scope(NimbusScope(*credentialsScopes.map { it.value }.toTypedArray()))
             }
-            authorizationDetails?.let {
-                AuthorizationDetail.Builder(AuthorizationType(Scope.Credential.value)).apply {
-                    it.toNimbusAuthDetail()
-                }
+            if (authorizationDetails != null) {
+                authorizationDetails(
+                    listOf(
+                        authorizationDetails.toNimbusAuthDetail(),
+                    ),
+                )
             }
+
             prompt(Prompt.Type.LOGIN)
         }.build()
 

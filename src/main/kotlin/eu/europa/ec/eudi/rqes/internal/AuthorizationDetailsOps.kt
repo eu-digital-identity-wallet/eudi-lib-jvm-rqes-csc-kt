@@ -15,30 +15,37 @@
  */
 package eu.europa.ec.eudi.rqes.internal
 
+import com.nimbusds.oauth2.sdk.rar.AuthorizationDetail
 import com.nimbusds.oauth2.sdk.rar.AuthorizationType
 import eu.europa.ec.eudi.rqes.AuthorizationDetails
 import eu.europa.ec.eudi.rqes.CredentialRef
 import eu.europa.ec.eudi.rqes.Scope
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.addJsonObject
-import kotlinx.serialization.json.buildJsonArray
+import net.minidev.json.JSONArray
+import net.minidev.json.JSONObject
 
-internal fun AuthorizationDetails.toNimbusAuthDetail(): com.nimbusds.oauth2.sdk.rar.AuthorizationDetail =
-    com.nimbusds.oauth2.sdk.rar.AuthorizationDetail.Builder(AuthorizationType(Scope.Credential.value)).apply {
+internal fun AuthorizationDetails.toNimbusAuthDetail(): AuthorizationDetail {
+    val hashesArray = documentDigestList?.let {
+        val docDigests = JSONArray()
+        it.documentDigests.forEach() { documentDigest ->
+            docDigests.add(
+                JSONObject().apply {
+                    put("hash", documentDigest.hash.value)
+                    put("label", documentDigest.label)
+                },
+            )
+        }
+        docDigests
+    }
+
+    return AuthorizationDetail.Builder(AuthorizationType(Scope.Credential.value)).apply {
         when (credentialRef) {
-            is CredentialRef.ByCredentialID -> field("credentialID", credentialRef.credentialID)
-            is CredentialRef.BySignatureQualifier -> field("signatureQualifier", credentialRef.signatureQualifier)
+            is CredentialRef.ByCredentialID -> field("credentialID", credentialRef.credentialID.value)
+            is CredentialRef.BySignatureQualifier -> field("signatureQualifier", credentialRef.signatureQualifier.value)
         }
         documentDigestList?.let {
-            buildJsonArray {
-                documentDigestList.documentDigests.map {
-                    addJsonObject {
-                        put("hash", JsonPrimitive(it.hash.value))
-                        put("label", JsonPrimitive(it.label))
-                    }
-                }
-            }
+            field("documentDigests", hashesArray)
             field("hashAlgorithmOID", it.hashAlgorithmOID.value)
         }
         locations?.let { field("locations", it) }
     }.build()
+}

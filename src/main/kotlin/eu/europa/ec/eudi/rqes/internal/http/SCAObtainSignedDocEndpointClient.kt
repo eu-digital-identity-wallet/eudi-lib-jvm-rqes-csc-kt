@@ -73,7 +73,12 @@ internal class SCAObtainSignedDocEndpointClient(
         signatureTimestamp: Clock,
     ): ObtainSignedDocResponse =
         ktorHttpClientFactory().use { client ->
-            val response = client.get("$scaBaseURL/signatures/obtain_signed_doc") {
+
+            requireNotNull(credentialCertificate.certificates) {
+                "Certificate is required for hash calculation"
+            }
+
+            val response = client.post("$scaBaseURL/signatures/obtain_signed_doc") {
                 contentType(ContentType.Application.Json)
                 setBody(
                     ObtainSignedDocRequestTO(
@@ -81,14 +86,15 @@ internal class SCAObtainSignedDocEndpointClient(
                             DocumentToSignTO(
                                 document = it.file.content.toBase64(),
                                 signatureFormat = it.signatureFormat,
-                                conformanceLevel = it.conformanceLevel,
+                                conformanceLevel = SCAConformanceLevel.fromDomain(it.conformanceLevel),
                                 signedEnvelopeProperty = it.signedEnvelopeProperty,
-                                asicContainer = it.asicContainer,
+                                asicContainer = SCAASICContainer.fromDomain(it.asicContainer),
                             )
                         },
-                        endEntityCertificate = credentialCertificate.certificates?.first().toString(),
-                        certificateChain = credentialCertificate.certificates?.drop(1)?.map { it.toString() }
-                            ?: emptyList(),
+                        endEntityCertificate = credentialCertificate.certificates.first().toBase64(),
+                        certificateChain = if (credentialCertificate.certificates.size > 1) {
+                            credentialCertificate.certificates.drop(1).map { it.toBase64() }
+                        } else null,
                         hashAlgorithmOID = hashAlgorithmOID.value,
                         date = signatureTimestamp.millis(),
                         signatures = signatures.map { it.value },

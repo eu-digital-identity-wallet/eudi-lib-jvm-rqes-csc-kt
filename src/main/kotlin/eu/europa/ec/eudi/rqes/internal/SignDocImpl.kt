@@ -25,32 +25,7 @@ internal class SignDocImpl(
     private val scaObtainSignedDocEndpointClient: SCAObtainSignedDocEndpointClient,
 ) : SignDoc {
 
-    override suspend fun CredentialAuthorized.SCAL1.signDoc(
-        documents: List<DocumentToSign>,
-        documentDigestList: DocumentDigestList,
-        signingAlgorithmOID: SigningAlgorithmOID,
-        signatureTimestamp: Clock,
-    ): Result<SignDocResponse> = runCatching {
-        val signatures: SignaturesList = signHashEndpointClient.signHashes(
-            credentialID,
-            documentDigestList.documentDigests.map { it.hash.value },
-            documentDigestList.hashAlgorithmOID,
-            signingAlgorithmOID,
-            tokens.accessToken,
-        )
-
-        val scaSignedDoc = scaObtainSignedDocEndpointClient.obtainSignedDoc(
-            documents,
-            credentialCertificate,
-            documentDigestList.hashAlgorithmOID,
-            signatures.signatures,
-            signatureTimestamp,
-        )
-
-        SignDocResponse(scaSignedDoc.documentWithSignature, scaSignedDoc.signatures, null)
-    }
-
-    override suspend fun CredentialAuthorized.SCAL2.signDoc(
+    override suspend fun CredentialAuthorized.signDoc(
         documents: List<DocumentToSign>,
         signingAlgorithmOID: SigningAlgorithmOID,
         signatureTimestamp: Clock,

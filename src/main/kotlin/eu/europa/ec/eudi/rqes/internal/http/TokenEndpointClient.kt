@@ -15,8 +15,10 @@
  */
 package eu.europa.ec.eudi.rqes.internal.http
 
+import com.nimbusds.oauth2.sdk.rar.AuthorizationDetail
 import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.internal.TokenResponse
+import eu.europa.ec.eudi.rqes.internal.toNimbusAuthDetail
 import io.ktor.client.call.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -109,12 +111,16 @@ internal class TokenEndpointClient(
     suspend fun requestAccessTokenAuthFlow(
         authorizationCode: AuthorizationCode,
         pkceVerifier: PKCEVerifier,
+        authorizationDetails: AuthorizationDetails?,
     ): Result<TokenResponse> = runCatching {
+        val authDetails = authorizationDetails?.toNimbusAuthDetail()
+
         val params = TokenEndpointForm.authCodeFlow(
             authorizationCode = authorizationCode,
             redirectionURI = authFlowRedirectionURI,
             clientId = client.clientId,
             pkceVerifier = pkceVerifier,
+            authorizationDetails = authDetails,
         )
         requestAccessToken(params).tokensOrFail(clock)
     }
@@ -164,6 +170,7 @@ internal object TokenEndpointForm {
     const val REFRESH_TOKEN_PARAM = "refresh_token"
     const val CLIENT_DATA = "clientData"
     const val SCOPE = "scope"
+    const val AUTHORIZATION_DETAILS = "authorization_details"
 
     fun authCodeFlow(
         clientId: String,
@@ -171,6 +178,7 @@ internal object TokenEndpointForm {
         redirectionURI: URI,
         pkceVerifier: PKCEVerifier,
         clientData: String? = null,
+        authorizationDetails: AuthorizationDetail?,
     ): Map<String, String> = buildMap {
         put(CLIENT_ID_PARAM, clientId)
         put(GRANT_TYPE_PARAM, AUTHORIZATION_CODE_GRANT)
@@ -178,6 +186,7 @@ internal object TokenEndpointForm {
         put(REDIRECT_URI_PARAM, redirectionURI.toString())
         put(CODE_VERIFIER_PARAM, pkceVerifier.codeVerifier)
         clientData?.let { put(CLIENT_DATA, clientData) }
+        authorizationDetails?.let { put(AUTHORIZATION_DETAILS, "[${authorizationDetails.toJSONObject().toJSONString()}]") }
     }.toMap()
 
     fun clientCredentialsFlow(

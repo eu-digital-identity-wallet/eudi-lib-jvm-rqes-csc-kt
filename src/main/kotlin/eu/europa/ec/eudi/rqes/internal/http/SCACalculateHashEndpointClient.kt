@@ -25,6 +25,7 @@ import kotlinx.serialization.Serializable
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.URL
+import java.security.cert.X509Certificate
 import java.time.Instant
 import java.util.*
 
@@ -34,7 +35,7 @@ internal data class CalculateHashResponse(
 )
 
 @Serializable
-internal data class CalculateHashRequestTO(
+private data class CalculateHashRequestTO(
     @SerialName("documents") val documents: List<DocumentToSignTO>,
     @SerialName("endEntityCertificate") val endEntityCertificate: String,
     @SerialName("certificateChain") val certificateChain: List<String>? = null,
@@ -45,10 +46,77 @@ internal data class CalculateHashRequestTO(
 internal data class DocumentToSignTO(
     @SerialName("document") @Required val document: String,
     @SerialName("signature_format") @Required val signatureFormat: SignatureFormat,
-    @SerialName("conformance_level") @Required val conformanceLevel: ConformanceLevel,
+    @SerialName("conformance_level") @Required val conformanceLevel: SCAConformanceLevel,
     @SerialName("signed_envelope_property") @Required val signedEnvelopeProperty: SignedEnvelopeProperty,
-    @SerialName("container") @Required val asicContainer: ASICContainer,
+    @SerialName("container") @Required val asicContainer: SCAASICContainer,
 )
+
+@Serializable
+internal enum class SCAConformanceLevel() {
+
+    @SerialName("Ades-B-B")
+    ADES_B_B,
+
+    @SerialName("Ades-B-T")
+    ADES_B_T,
+
+    @SerialName("Ades-B-LT")
+    ADES_B_LT,
+
+    @SerialName("Ades-B-LTA")
+    ADES_B_LTA,
+
+    @SerialName("Ades-B")
+    ADES_B,
+
+    @SerialName("Ades-T")
+    ADES_T,
+
+    @SerialName("Ades-LT")
+    ADES_LT,
+
+    @SerialName("Ades-LTA")
+    ADES_LTA,
+
+    ;
+
+    companion object {
+        fun fromDomain(value: ConformanceLevel): SCAConformanceLevel =
+            when (value) {
+                ConformanceLevel.ADES_B_B -> ADES_B_B
+                ConformanceLevel.ADES_B_T -> ADES_B_T
+                ConformanceLevel.ADES_B_LT -> ADES_B_LT
+                ConformanceLevel.ADES_B_LTA -> ADES_B_LTA
+                ConformanceLevel.ADES_B -> ADES_B
+                ConformanceLevel.ADES_T -> ADES_T
+                ConformanceLevel.ADES_LT -> ADES_LT
+                ConformanceLevel.ADES_LTA -> ADES_LTA
+            }
+    }
+}
+
+internal enum class SCAASICContainer() {
+
+    @SerialName("No")
+    NONE,
+
+    @SerialName("ASiC-E")
+    ASIC_E,
+
+    @SerialName("ASiC-S")
+    ASIC_S,
+
+    ;
+
+    companion object {
+        fun fromDomain(value: ASICContainer): SCAASICContainer =
+            when (value) {
+                ASICContainer.NONE -> NONE
+                ASICContainer.ASIC_E -> ASIC_E
+                ASICContainer.ASIC_S -> ASIC_S
+            }
+    }
+}
 
 internal sealed interface CalculateHashResponseTO {
 
@@ -66,9 +134,18 @@ internal sealed interface CalculateHashResponseTO {
 
     fun getOrFail(): CalculateHashResponse =
         when (this) {
-            is Success -> CalculateHashResponse(hashes, Instant.ofEpochMilli(signatureDate))
+            is Success -> CalculateHashResponse(
+                hashes, // .map { URLDecoder.decode(it, Charsets.UTF_8) },
+                Instant.ofEpochMilli(signatureDate),
+            )
+
             is Failure -> throw RuntimeException("Error: $error, $errorDescription")
         }
+}
+
+fun X509Certificate.toBase64(): String {
+    val encoded = this.encoded // Get the encoded form of the certificate
+    return Base64.getEncoder().encodeToString(encoded) // Encode the byte array to a Base64 string
 }
 
 internal class SCACalculateHashEndpointClient(
@@ -81,7 +158,12 @@ internal class SCACalculateHashEndpointClient(
         hashAlgorithmOID: HashAlgorithmOID,
     ): CalculateHashResponse =
         ktorHttpClientFactory().use { client ->
-            val response = client.get("$scaBaseURL/signatures/calculate_hash") {
+
+            requireNotNull(credentialCertificate.certificates) {
+                "Certificate is required for hash calculation"
+            }
+
+            val response = client.post("$scaBaseURL/signatures/calculate_hash") {
                 contentType(ContentType.Application.Json)
                 setBody(
                     CalculateHashRequestTO(
@@ -89,14 +171,15 @@ internal class SCACalculateHashEndpointClient(
                             DocumentToSignTO(
                                 document = it.file.content.toBase64(),
                                 signatureFormat = it.signatureFormat,
-                                conformanceLevel = it.conformanceLevel,
+                                conformanceLevel = SCAConformanceLevel.fromDomain(it.conformanceLevel),
                                 signedEnvelopeProperty = it.signedEnvelopeProperty,
-                                asicContainer = it.asicContainer,
+                                asicContainer = SCAASICContainer.fromDomain(it.asicContainer),
                             )
                         },
-                        endEntityCertificate = credentialCertificate.certificates?.first().toString(),
-                        certificateChain = credentialCertificate.certificates?.drop(1)?.map { it.toString() }
-                            ?: emptyList(),
+                        endEntityCertificate = credentialCertificate.certificates.first().toBase64(),
+                        certificateChain = if (credentialCertificate.certificates.size > 1) credentialCertificate.certificates.drop(
+                            1,
+                        ).map { it.toBase64() } else null,
                         hashAlgorithmOID = hashAlgorithmOID.value,
                     ),
                 )

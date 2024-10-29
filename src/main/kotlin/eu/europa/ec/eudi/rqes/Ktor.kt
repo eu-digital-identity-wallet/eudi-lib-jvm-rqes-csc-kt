@@ -25,6 +25,7 @@ typealias KtorHttpClientFactory = () -> HttpClient
 internal val JsonSupport: Json = Json {
     ignoreUnknownKeys = true
     prettyPrint = true
+    encodeDefaults = true
 }
 
 /**

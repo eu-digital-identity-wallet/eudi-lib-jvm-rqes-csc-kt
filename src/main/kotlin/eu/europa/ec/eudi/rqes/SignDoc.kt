@@ -31,14 +31,7 @@ data class ValidationInfo(
 
 interface SignDoc {
 
-    suspend fun CredentialAuthorized.SCAL1.signDoc(
-        documents: List<DocumentToSign>,
-        documentDigestList: DocumentDigestList,
-        signingAlgorithmOID: SigningAlgorithmOID,
-        signatureTimestamp: Clock,
-    ): Result<SignDocResponse>
-
-    suspend fun CredentialAuthorized.SCAL2.signDoc(
+    suspend fun CredentialAuthorized.signDoc(
         documents: List<DocumentToSign>,
         signingAlgorithmOID: SigningAlgorithmOID,
         signatureTimestamp: Clock,

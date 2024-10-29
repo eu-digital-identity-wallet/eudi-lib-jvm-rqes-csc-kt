@@ -20,11 +20,11 @@ import eu.europa.ec.eudi.rqes.internal.http.CredentialsListEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.CredentialsListTO
 
 data class CredentialsListRequest(
-    val credentialInfo: Boolean? = false,
+    val credentialInfo: Boolean? = true,
     val certificates: Certificates? = Certificates.Single,
-    val certInfo: Boolean? = false,
-    val authInfo: Boolean? = false,
-    val onlyValid: Boolean? = false,
+    val certInfo: Boolean? = true,
+    val authInfo: Boolean? = true,
+    val onlyValid: Boolean? = true,
     val lang: String? = null,
     val clientData: String? = null,
 )

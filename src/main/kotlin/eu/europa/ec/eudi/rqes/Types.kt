@@ -16,6 +16,9 @@
 package eu.europa.ec.eudi.rqes
 
 import com.nimbusds.oauth2.sdk.`as`.ReadOnlyAuthorizationServerMetadata
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.put
 import java.io.InputStream
 import java.net.URI
 import java.net.URL
@@ -61,7 +64,9 @@ value class HashAlgorithmOID(val value: String) {
     }
 
     companion object {
-        val SHA256RSA = HashAlgorithmOID("1.2.840.113549.1.1.11")
+        // TODO find correct OIDs
+        val SHA256 = HashAlgorithmOID("1.2.840.113549.1.1.1")
+        val SHA256RSA = HashAlgorithmOID("2.16.840.1.101.3.4.2.1")
         val SHA385RSA = HashAlgorithmOID("1.2.840.113549.1.1.12")
         val SHA512RSA = HashAlgorithmOID("1.2.840.113549.1.1.13")
     }
@@ -74,6 +79,7 @@ value class SigningAlgorithmOID(val value: String) {
     }
 
     companion object {
+        // TODO find correct OIDs
         val RSA = SigningAlgorithmOID("1.2.840.113549.1.1.1")
         val RSA_SHA256 = SigningAlgorithmOID("1.2.840.113549.1.1.11")
         val RSA_SHA385 = SigningAlgorithmOID("1.2.840.113549.1.1.12")
@@ -191,7 +197,7 @@ value class HttpsUrl private constructor(val value: URL) {
          */
         operator fun invoke(value: String): Result<HttpsUrl> = runCatching {
             val uri = URI.create(value)
-            require(uri.scheme.contentEquals("https", true)) { "URL must use https protocol" }
+            // require(uri.scheme.contentEquals("https", true)) { "URL must use https protocol" }
             HttpsUrl(uri.toURL())
         }
     }
@@ -294,7 +300,7 @@ data class PKCEVerifier(
     }
 }
 
-internal data class AuthorizationDetails(
+data class AuthorizationDetails(
     val credentialRef: CredentialRef,
     val numSignatures: Int? = 1,
     val documentDigestList: DocumentDigestList?,
@@ -313,4 +319,18 @@ value class Signature(val value: String) {
     init {
         require(value.isNotEmpty()) { "Signature value must not be empty" }
     }
+}
+
+fun main() {
+    val doc = DocumentDigestList(
+        listOf(DocumentDigest(Digest("documentID"), "documentContent")),
+        HashAlgorithmOID.SHA256RSA,
+    )
+
+    buildJsonArray {
+        addJsonObject {
+            put("hash", "documentDigest.hash.value")
+            put("label", "documentDigest.label")
+        }
+    }.also { println(it) }
 }

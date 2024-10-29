@@ -19,6 +19,7 @@ import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.AuthorizationError.InvalidAuthorizationState
 import eu.europa.ec.eudi.rqes.internal.http.AuthorizationEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.TokenEndpointClient
+import java.time.Clock
 import java.time.Instant
 import com.nimbusds.oauth2.sdk.id.State as NimbusState
 
@@ -51,9 +52,14 @@ internal class AuthorizeServiceImpl(
     ): Result<ServiceAccessAuthorized> =
         runCatching {
             ensure(serverState == value.state) { InvalidAuthorizationState() }
-            val tokenResponse = tokenEndpointClient.requestAccessTokenAuthFlow(authorizationCode, value.pkceVerifier)
+            val tokenResponse = tokenEndpointClient.requestAccessTokenAuthFlow(
+                authorizationCode,
+                value.pkceVerifier,
+                authorizationDetails = null,
+            )
             val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
-            ServiceAccessAuthorized(OAuth2Tokens(accessToken, refreshToken, timestamp))
+
+            ServiceAccessAuthorized(OAuth2Tokens(accessToken, null, Clock.systemUTC().instant().plusSeconds(600)))
         }
 
     override suspend fun authorizeWithClientCredentials(): Result<ServiceAccessAuthorized> = runCatching {

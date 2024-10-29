@@ -29,6 +29,7 @@ private data class SignHashRequestTO(
     @SerialName("hashes") val hashes: List<String>,
     @SerialName("hashAlgorithmOID") val hashAlgorithmOID: String,
     @SerialName("signAlgo") val signAlgorithmOID: String,
+    @SerialName("operationMode") val operationMode: String = "S",
 )
 
 @Serializable

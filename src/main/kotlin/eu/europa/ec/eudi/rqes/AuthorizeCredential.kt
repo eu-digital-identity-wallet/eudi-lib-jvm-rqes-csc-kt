@@ -18,28 +18,16 @@ package eu.europa.ec.eudi.rqes
 data class CredentialAuthorizationRequestPrepared(
     val value: AuthorizationRequestPrepared,
     val credential: CredentialInfo,
-    val documentDigestList: DocumentDigestList?,
+    val documentDigestList: DocumentDigestList,
+    val authorizationDetails: AuthorizationDetails,
 )
 
-sealed interface CredentialAuthorized : java.io.Serializable {
-
-    val tokens: OAuth2Tokens
-    val credentialID: CredentialID
-    val credentialCertificate: CredentialCertificate
-
-    data class SCAL1(
-        override val tokens: OAuth2Tokens,
-        override val credentialID: CredentialID,
-        override val credentialCertificate: CredentialCertificate,
-    ) : CredentialAuthorized
-
-    data class SCAL2(
-        override val tokens: OAuth2Tokens,
-        override val credentialID: CredentialID,
-        override val credentialCertificate: CredentialCertificate,
-        val documentDigestList: DocumentDigestList,
-    ) : CredentialAuthorized
-}
+data class CredentialAuthorized(
+    val tokens: OAuth2Tokens,
+    val credentialID: CredentialID,
+    val credentialCertificate: CredentialCertificate,
+    val documentDigestList: DocumentDigestList,
+) : java.io.Serializable
 
 interface AuthorizeCredential {
 

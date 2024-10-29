@@ -48,21 +48,25 @@ internal class AuthorizeCredentialImpl(
             documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA256RSA)
         }
 
+        documentDigestList = calculateDocumentHash(documents!!, credential, HashAlgorithmOID.SHA256RSA)
+
         val scopes = listOf(Scope(Scope.Credential.value))
         val state = walletState ?: State().value
+        val authorizationDetails = AuthorizationDetails(
+            CredentialRef.ByCredentialID(credential.credentialID),
+            numSignatures,
+            documentDigestList,
+        )
         val (codeVerifier, authorizationCodeUrl) = authorizationEndpointClient.submitParOrCreateAuthorizationRequestUrl(
             scopes,
-            AuthorizationDetails(
-                CredentialRef.ByCredentialID(credential.credentialID),
-                numSignatures,
-                documentDigestList,
-            ),
+            authorizationDetails,
             state,
         ).getOrThrow()
         CredentialAuthorizationRequestPrepared(
             AuthorizationRequestPrepared(authorizationCodeUrl, codeVerifier, state),
             credential,
             documentDigestList,
+            authorizationDetails,
         )
     }
 
@@ -87,25 +91,14 @@ internal class AuthorizeCredentialImpl(
         serverState: String,
     ): Result<CredentialAuthorized> = runCatching {
         ensure(serverState == value.state) { InvalidAuthorizationState() }
-        val tokenResponse = tokenEndpointClient.requestAccessTokenAuthFlow(authorizationCode, value.pkceVerifier)
+        val tokenResponse =
+            tokenEndpointClient.requestAccessTokenAuthFlow(authorizationCode, value.pkceVerifier, authorizationDetails)
         val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
-
-        if (credential.scal == SCAL.One) {
-            CredentialAuthorized.SCAL1(
-                OAuth2Tokens(accessToken, refreshToken, timestamp),
-                credential.credentialID,
-                credential.certificate,
-            )
-        } else {
-            requireNotNull(documentDigestList) {
-                "Document list is required for SCAL 2"
-            }
-            CredentialAuthorized.SCAL2(
-                OAuth2Tokens(accessToken, refreshToken, timestamp),
-                credential.credentialID,
-                credential.certificate,
-                documentDigestList,
-            )
-        }
+        CredentialAuthorized(
+            OAuth2Tokens(accessToken, refreshToken, timestamp),
+            credential.credentialID,
+            credential.certificate,
+            documentDigestList,
+        )
     }
 }

@@ -131,8 +131,6 @@ fun main() {
             println("Authorized credential request:")
             println(credentialAuthorized)
 
-            require(credentialAuthorized is CredentialAuthorized.SCAL2) { "Expected SCAL2" }
-
             val signatures = with(credentialAuthorized) {
                 signHash(SigningAlgorithmOID.ECDSA_SHA256).getOrThrow()
             }

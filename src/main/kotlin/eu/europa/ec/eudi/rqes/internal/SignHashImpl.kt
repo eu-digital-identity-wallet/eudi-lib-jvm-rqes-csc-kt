@@ -21,20 +21,8 @@ import eu.europa.ec.eudi.rqes.internal.http.SignHashEndpointClient
 internal class SignHashImpl(
     private val signHashEndpointClient: SignHashEndpointClient,
 ) : SignHash {
-    override suspend fun CredentialAuthorized.SCAL1.signHash(
-        documentDigestList: DocumentDigestList,
-        signingAlgorithmOID: SigningAlgorithmOID,
-    ): Result<SignaturesList> = runCatching {
-        signHashEndpointClient.signHashes(
-            credentialID,
-            documentDigestList.documentDigests.map { it.hash.value },
-            documentDigestList.hashAlgorithmOID,
-            signingAlgorithmOID,
-            tokens.accessToken,
-        )
-    }
 
-    override suspend fun CredentialAuthorized.SCAL2.signHash(
+    override suspend fun CredentialAuthorized.signHash(
         signingAlgorithmOID: SigningAlgorithmOID,
     ): Result<SignaturesList> = runCatching {
         signHashEndpointClient.signHashes(

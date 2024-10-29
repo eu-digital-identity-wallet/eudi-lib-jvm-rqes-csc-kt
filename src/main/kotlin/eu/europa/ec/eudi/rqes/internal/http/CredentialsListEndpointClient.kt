@@ -27,15 +27,17 @@ import io.ktor.http.*
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.io.ByteArrayInputStream
 import java.net.URL
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import javax.security.auth.x500.X500Principal
 
 @Serializable
-private class CredentialsListRequestTO(
+private data class CredentialsListRequestTO(
     @SerialName("credentialInfo") val credentialInfo: Boolean? = false,
     @SerialName("certificates") val certificates: String? = Certificates.Single.toString(),
     @SerialName("certInfo") val certInfo: Boolean? = false,
@@ -47,7 +49,7 @@ private class CredentialsListRequestTO(
     companion object {
         fun from(request: CredentialsListRequest): CredentialsListRequestTO = CredentialsListRequestTO(
             credentialInfo = request.credentialInfo,
-            certificates = request.certificates?.toString(),
+            certificates = request.certificates?.toString()?.lowercase(),
             certInfo = request.certInfo,
             authInfo = request.authInfo,
             onlyValid = request.onlyValid,
@@ -140,7 +142,7 @@ fun toCertificateStatus(value: String) =
 fun toAuthorizationMode(value: String) =
     when (value) {
         "explicit" -> AuthorizationMode.Explicit
-        "oauth2Code" -> AuthorizationMode.OAuth2Code
+        "oauth2code" -> AuthorizationMode.OAuth2Code
         else -> throw IllegalArgumentException("Unknown authorization mode: $value")
     }
 
@@ -158,8 +160,10 @@ internal class CredentialKeyCertificateTO(
         fun CredentialKeyCertificateTO.toDomain(): CredentialCertificate = CredentialCertificate(
             status = status?.let { toCertificateStatus(it) },
             certificates = certificates?.map {
-                CertificateFactory.getInstance("X.509")
-                    .generateCertificate(it.byteInputStream()) as X509Certificate
+                val certificateBytes: ByteArray = Base64.getDecoder().decode(it)
+                val inputStream = ByteArrayInputStream(certificateBytes)
+                val x509CertificateFactory = CertificateFactory.getInstance("X.509")
+                x509CertificateFactory.generateCertificate(inputStream) as X509Certificate
             },
             issuerDN = X500Principal(issuerDN),
             serialNumber = serialNumber,
@@ -173,8 +177,8 @@ internal class CredentialKeyCertificateTO(
 @Serializable
 internal class CredentialAuthTO(
     @SerialName("mode") @Required val mode: String,
-    @SerialName("expression") val expression: String = "AND",
-    @SerialName("objects") @Required val objects: List<AuthenticationObjectTO>,
+    @SerialName("expression") val expression: String? = "AND",
+    @SerialName("objects") @Required val objects: List<AuthenticationObjectTO>?,
 ) {
     companion object {
         fun CredentialAuthTO.toDomain(): CredentialAuthorization = when (mode) {
@@ -185,7 +189,7 @@ internal class CredentialAuthTO(
             else -> CredentialAuthorization.Explicit(
                 authorizationMode = toAuthorizationMode(mode),
                 expression = expression,
-                authenticationObjects = objects.map { it.toDomain() },
+                authenticationObjects = objects?.map { it.toDomain() },
             )
         }
     }
