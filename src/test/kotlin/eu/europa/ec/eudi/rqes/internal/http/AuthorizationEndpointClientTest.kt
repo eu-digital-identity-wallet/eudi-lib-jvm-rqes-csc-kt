@@ -64,7 +64,7 @@ class AuthorizationEndpointClientTest {
                         ),
                     ),
                     HashAlgorithmOID.SHA_256,
-                    Instant.now()
+                    Instant.now(),
                 ),
             ),
             "state",

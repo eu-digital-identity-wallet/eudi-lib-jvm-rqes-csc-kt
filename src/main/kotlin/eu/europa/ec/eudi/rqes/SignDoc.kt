@@ -15,8 +15,6 @@
  */
 package eu.europa.ec.eudi.rqes
 
-import java.time.Clock
-
 data class SignDocResponse(
     val documentWithSignature: List<String>,
     val signatureObject: List<String>,
@@ -33,6 +31,6 @@ interface SignDoc {
 
     suspend fun CredentialAuthorized.signDoc(
         documents: List<DocumentToSign>,
-        signingAlgorithmOID: SigningAlgorithmOID
+        signingAlgorithmOID: SigningAlgorithmOID,
     ): Result<SignDocResponse>
 }

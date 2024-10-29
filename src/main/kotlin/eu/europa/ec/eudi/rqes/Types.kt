@@ -16,12 +16,7 @@
 package eu.europa.ec.eudi.rqes
 
 import com.nimbusds.oauth2.sdk.`as`.ReadOnlyAuthorizationServerMetadata
-import kotlinx.serialization.json.addJsonObject
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.put
 import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
 import java.net.URI
 import java.net.URL
 import java.time.Duration
@@ -324,4 +319,3 @@ value class Signature(val value: String) {
         require(value.isNotEmpty()) { "Signature value must not be empty" }
     }
 }
-

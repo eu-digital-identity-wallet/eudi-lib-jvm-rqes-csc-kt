@@ -23,7 +23,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.FileInputStream
 import java.net.URL
-import java.time.Clock
 import java.time.Instant
 
 internal data class ObtainSignedDocResponse(

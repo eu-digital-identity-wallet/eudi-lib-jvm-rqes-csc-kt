@@ -18,7 +18,6 @@ package eu.europa.ec.eudi.rqes.internal
 import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.internal.http.SCAObtainSignedDocEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.SignHashEndpointClient
-import java.time.Clock
 
 internal class SignDocImpl(
     private val signHashEndpointClient: SignHashEndpointClient,
@@ -27,7 +26,7 @@ internal class SignDocImpl(
 
     override suspend fun CredentialAuthorized.signDoc(
         documents: List<DocumentToSign>,
-        signingAlgorithmOID: SigningAlgorithmOID
+        signingAlgorithmOID: SigningAlgorithmOID,
     ): Result<SignDocResponse> = runCatching {
         val signatures: SignaturesList = signHashEndpointClient.signHashes(
             credentialID,
