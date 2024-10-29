@@ -21,8 +21,10 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.io.FileInputStream
 import java.net.URL
 import java.time.Clock
+import java.time.Instant
 
 internal data class ObtainSignedDocResponse(
     val documentWithSignature: List<String>,
@@ -70,7 +72,7 @@ internal class SCAObtainSignedDocEndpointClient(
         credentialCertificate: CredentialCertificate,
         hashAlgorithmOID: HashAlgorithmOID,
         signatures: List<Signature>,
-        signatureTimestamp: Clock,
+        signatureTimestamp: Instant,
     ): ObtainSignedDocResponse =
         ktorHttpClientFactory().use { client ->
 
@@ -84,7 +86,7 @@ internal class SCAObtainSignedDocEndpointClient(
                     ObtainSignedDocRequestTO(
                         documents = documents.map {
                             DocumentToSignTO(
-                                document = it.file.content.toBase64(),
+                                document = FileInputStream(it.file.content).toBase64(),
                                 signatureFormat = it.signatureFormat,
                                 conformanceLevel = SCAConformanceLevel.fromDomain(it.conformanceLevel),
                                 signedEnvelopeProperty = it.signedEnvelopeProperty,
@@ -96,7 +98,7 @@ internal class SCAObtainSignedDocEndpointClient(
                             credentialCertificate.certificates.drop(1).map { it.toBase64() }
                         } else null,
                         hashAlgorithmOID = hashAlgorithmOID.value,
-                        date = signatureTimestamp.millis(),
+                        date = signatureTimestamp.toEpochMilli(),
                         signatures = signatures.map { it.value },
                     ),
                 )

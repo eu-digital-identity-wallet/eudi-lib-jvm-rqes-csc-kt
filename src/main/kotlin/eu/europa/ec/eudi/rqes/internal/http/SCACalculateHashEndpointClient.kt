@@ -23,6 +23,7 @@ import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
 import java.io.InputStream
 import java.net.URL
 import java.security.cert.X509Certificate
@@ -169,7 +170,7 @@ internal class SCACalculateHashEndpointClient(
                     CalculateHashRequestTO(
                         documents = documents.map {
                             DocumentToSignTO(
-                                document = it.file.content.toBase64(),
+                                document = FileInputStream(it.file.content).toBase64(),
                                 signatureFormat = it.signatureFormat,
                                 conformanceLevel = SCAConformanceLevel.fromDomain(it.conformanceLevel),
                                 signedEnvelopeProperty = it.signedEnvelopeProperty,

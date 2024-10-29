@@ -27,8 +27,7 @@ internal class SignDocImpl(
 
     override suspend fun CredentialAuthorized.signDoc(
         documents: List<DocumentToSign>,
-        signingAlgorithmOID: SigningAlgorithmOID,
-        signatureTimestamp: Clock,
+        signingAlgorithmOID: SigningAlgorithmOID
     ): Result<SignDocResponse> = runCatching {
         val signatures: SignaturesList = signHashEndpointClient.signHashes(
             credentialID,
@@ -43,7 +42,7 @@ internal class SignDocImpl(
             credentialCertificate,
             documentDigestList.hashAlgorithmOID,
             signatures.signatures,
-            signatureTimestamp,
+            documentDigestList.timestamp,
         )
 
         SignDocResponse(scaSignedDoc.documentWithSignature, scaSignedDoc.signatures, null)

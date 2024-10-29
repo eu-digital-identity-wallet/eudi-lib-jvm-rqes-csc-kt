@@ -98,14 +98,14 @@ fun main() {
             }
 
             val document = Document(
-                FileInputStream(File(ClassLoader.getSystemResource("sample.pdf").path)),
+                File(ClassLoader.getSystemResource("sample.pdf").path),
                 "sample pdf",
             )
             val documentToSign = DocumentToSign(
                 document,
                 SignatureFormat.P,
                 ConformanceLevel.ADES_B_B,
-                SigningAlgorithmOID.ECDSA_SHA256,
+                SigningAlgorithmOID.RSA,
                 SignedEnvelopeProperty.ENVELOPED,
                 ASICContainer.NONE,
             )
@@ -132,7 +132,7 @@ fun main() {
             println(credentialAuthorized)
 
             val signatures = with(credentialAuthorized) {
-                signHash(SigningAlgorithmOID.ECDSA_SHA256).getOrThrow()
+                signHash(SigningAlgorithmOID.RSA).getOrThrow()
             }
 
             println("Signatures: $signatures")

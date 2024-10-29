@@ -19,6 +19,7 @@ import eu.europa.ec.eudi.rqes.*
 import kotlinx.coroutines.test.runTest
 import java.net.URI
 import java.net.URLEncoder
+import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -62,7 +63,8 @@ class AuthorizationEndpointClientTest {
                             "sample document 2",
                         ),
                     ),
-                    HashAlgorithmOID.SHA256RSA,
+                    HashAlgorithmOID.SHA_256,
+                    Instant.now()
                 ),
             ),
             "state",

@@ -45,10 +45,10 @@ internal class AuthorizeCredentialImpl(
                 "SCA Calculate Hash Endpoint Client is required for SCAL 2"
             }
 
-            documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA256RSA)
+            documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA_256)
         }
 
-        documentDigestList = calculateDocumentHash(documents!!, credential, HashAlgorithmOID.SHA256RSA)
+        documentDigestList = calculateDocumentHash(documents!!, credential, HashAlgorithmOID.SHA_256)
 
         val scopes = listOf(Scope(Scope.Credential.value))
         val state = walletState ?: State().value
@@ -78,11 +78,11 @@ internal class AuthorizeCredentialImpl(
         requireNotNull(scaCalculateHashEndpointClient) {
             "SCA Calculate Hash Endpoint Client is required hash calculation"
         }
-        val hashes = scaCalculateHashEndpointClient.calculateHash(documents, credential.certificate, hashAlgorithmOID)
-        documents.zip(hashes.hashes).map {
+        val hashesResponse = scaCalculateHashEndpointClient.calculateHash(documents, credential.certificate, hashAlgorithmOID)
+        documents.zip(hashesResponse.hashes).map {
             DocumentDigest(Digest(it.second), it.first.file.label)
         }.let {
-            return DocumentDigestList(it, hashAlgorithmOID)
+            return DocumentDigestList(it, hashAlgorithmOID, hashesResponse.signatureDate)
         }
     }
 

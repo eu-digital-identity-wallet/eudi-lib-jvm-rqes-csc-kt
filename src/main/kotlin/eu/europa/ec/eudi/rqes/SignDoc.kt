@@ -33,7 +33,6 @@ interface SignDoc {
 
     suspend fun CredentialAuthorized.signDoc(
         documents: List<DocumentToSign>,
-        signingAlgorithmOID: SigningAlgorithmOID,
-        signatureTimestamp: Clock,
+        signingAlgorithmOID: SigningAlgorithmOID
     ): Result<SignDocResponse>
 }

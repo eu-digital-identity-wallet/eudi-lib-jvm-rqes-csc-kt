@@ -27,7 +27,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.net.URI
 import java.security.cert.X509Certificate
-import java.time.Clock
 import java.util.*
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
@@ -103,7 +102,7 @@ fun main() {
         val rsspMetadata = cscClient.rsspMetadata
 
         with(cscClient) {
-            val walletState = UUID.randomUUID().toString()
+            var walletState = UUID.randomUUID().toString()
 
             // initiate the service authorization request
             val serviceAuthRequestPrepared = prepareServiceAuthorizationRequest(walletState).getOrThrow()
@@ -126,7 +125,7 @@ fun main() {
 
             val documentToSign = DocumentToSign(
                 Document(
-                    FileInputStream(File(ClassLoader.getSystemResource("sample.pdf").path)),
+                    File(ClassLoader.getSystemResource("sample.pdf").path),
                     "A sample pdf",
                 ),
                 SignatureFormat.P,
@@ -136,9 +135,16 @@ fun main() {
                 ASICContainer.NONE,
             )
 
+            walletState = UUID.randomUUID().toString()
+
             // initiate the credential authorization request flow
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
-                prepareCredentialAuthorizationRequest(credentials.first(), listOf(documentToSign), 1, walletState).getOrThrow()
+                prepareCredentialAuthorizationRequest(
+                    credentials.first(),
+                    listOf(documentToSign),
+                    1,
+                    walletState
+                ).getOrThrow()
             }
 
             println("Use the following URL to authenticate:\n${credAuthRequestPrepared.value.authorizationCodeURL}")
@@ -157,8 +163,12 @@ fun main() {
             println("Authorized credential request:\n$credentialAuthorized")
 
             val signedDoc = with(credentialAuthorized) {
-                signDoc(listOf(documentToSign), SigningAlgorithmOID.RSA, Clock.systemUTC()).getOrThrow()
+                signDoc(listOf(documentToSign), SigningAlgorithmOID.RSA).getOrThrow()
             }
+
+            val s = signedDoc.documentWithSignature[0]
+
+            File("signed.pdf").writeBytes(Base64.getDecoder().decode(s))
         }
     }
 }

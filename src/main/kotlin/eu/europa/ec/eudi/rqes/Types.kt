@@ -19,6 +19,8 @@ import com.nimbusds.oauth2.sdk.`as`.ReadOnlyAuthorizationServerMetadata
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
+import java.io.File
+import java.io.FileInputStream
 import java.io.InputStream
 import java.net.URI
 import java.net.URL
@@ -64,11 +66,16 @@ value class HashAlgorithmOID(val value: String) {
     }
 
     companion object {
-        // TODO find correct OIDs
-        val SHA256 = HashAlgorithmOID("1.2.840.113549.1.1.1")
-        val SHA256RSA = HashAlgorithmOID("2.16.840.1.101.3.4.2.1")
-        val SHA385RSA = HashAlgorithmOID("1.2.840.113549.1.1.12")
-        val SHA512RSA = HashAlgorithmOID("1.2.840.113549.1.1.13")
+        val SHA_224 = HashAlgorithmOID("2.16.840.1.101.3.4.2.4")
+        val SHA_256 = HashAlgorithmOID("2.16.840.1.101.3.4.2.1")
+        val SHA_385 = HashAlgorithmOID("2.16.840.1.101.3.4.2.2")
+        val SHA_512 = HashAlgorithmOID("2.16.840.1.101.3.4.2.3")
+        val SHA3_224 = HashAlgorithmOID("2.16.840.1.101.3.4.2.7")
+        val SHA3_256 = HashAlgorithmOID("2.16.840.1.101.3.4.2.8")
+        val SHA3_385 = HashAlgorithmOID("2.16.840.1.101.3.4.2.9")
+        val SHA3_512 = HashAlgorithmOID("2.16.840.1.101.3.4.2.10")
+        val MD2 = HashAlgorithmOID("1.2.840.113549.2.2")
+        val MD5 = HashAlgorithmOID("1.2.840.113549.2.5")
     }
 }
 
@@ -79,26 +86,23 @@ value class SigningAlgorithmOID(val value: String) {
     }
 
     companion object {
-        // TODO find correct OIDs
         val RSA = SigningAlgorithmOID("1.2.840.113549.1.1.1")
-        val RSA_SHA256 = SigningAlgorithmOID("1.2.840.113549.1.1.11")
-        val RSA_SHA385 = SigningAlgorithmOID("1.2.840.113549.1.1.12")
-        val RSA_SHA512 = SigningAlgorithmOID("1.2.840.113549.1.1.13")
-        val ECDSA_SHA224 = SigningAlgorithmOID("1.2.840.10045.4.3.1")
-        val ECDSA_SHA256 = SigningAlgorithmOID("1.2.840.10045.4.3.2")
-        val ECDSA_SHA384 = SigningAlgorithmOID("1.2.840.10045.4.3.3")
-        val ECDSA_SHA512 = SigningAlgorithmOID("1.2.840.10045.4.3.4")
+        val DSA = SigningAlgorithmOID("1.2.840.10040.4.1")
+        val ECDSA = SigningAlgorithmOID("1.2.840.10045.2.1")
+        val X25519 = SigningAlgorithmOID("1.3.101.110")
+        val X448 = SigningAlgorithmOID("1.3.101.111")
     }
 }
 
 data class Document(
-    val content: InputStream,
+    val content: File,
     val label: String?,
 )
 
 data class DocumentDigestList(
     val documentDigests: List<DocumentDigest>,
     val hashAlgorithmOID: HashAlgorithmOID,
+    val timestamp: Instant,
 ) {
     init {
         require(documentDigests.isNotEmpty()) { "Document list must not be empty" }
@@ -321,16 +325,3 @@ value class Signature(val value: String) {
     }
 }
 
-fun main() {
-    val doc = DocumentDigestList(
-        listOf(DocumentDigest(Digest("documentID"), "documentContent")),
-        HashAlgorithmOID.SHA256RSA,
-    )
-
-    buildJsonArray {
-        addJsonObject {
-            put("hash", "documentDigest.hash.value")
-            put("label", "documentDigest.label")
-        }
-    }.also { println(it) }
-}
