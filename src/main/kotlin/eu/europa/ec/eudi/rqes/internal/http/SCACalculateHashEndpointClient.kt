@@ -144,7 +144,7 @@ internal sealed interface CalculateHashResponseTO {
         }
 }
 
-fun X509Certificate.toBase64(): String {
+internal fun X509Certificate.toBase64(): String {
     val encoded = this.encoded // Get the encoded form of the certificate
     return Base64.getEncoder().encodeToString(encoded) // Encode the byte array to a Base64 string
 }

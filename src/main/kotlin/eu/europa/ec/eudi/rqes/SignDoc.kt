@@ -29,7 +29,13 @@ data class ValidationInfo(
 
 interface SignDoc {
 
-    suspend fun CredentialAuthorized.signDoc(
+    suspend fun CredentialAuthorized.SCAL1.signDoc(
+        documents: List<DocumentToSign>,
+        documentDigestList: DocumentDigestList,
+        signingAlgorithmOID: SigningAlgorithmOID,
+    ): Result<SignDocResponse>
+
+    suspend fun CredentialAuthorized.SCAL2.signDoc(
         documents: List<DocumentToSign>,
         signingAlgorithmOID: SigningAlgorithmOID,
     ): Result<SignDocResponse>

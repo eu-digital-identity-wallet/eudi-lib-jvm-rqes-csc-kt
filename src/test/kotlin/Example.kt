@@ -156,6 +156,8 @@ fun main() {
                 ).getOrThrow()
             }
 
+            require(credentialAuthorized is CredentialAuthorized.SCAL2)
+
             val signedDoc = with(credentialAuthorized) {
                 signDoc(listOf(documentToSign), SigningAlgorithmOID.RSA).getOrThrow()
             }

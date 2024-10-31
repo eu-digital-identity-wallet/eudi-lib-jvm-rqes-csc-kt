@@ -130,6 +130,8 @@ fun main() {
             println("Authorized credential request:")
             println(credentialAuthorized)
 
+            require(credentialAuthorized is CredentialAuthorized.SCAL2)
+
             val signatures = with(credentialAuthorized) {
                 signHash(SigningAlgorithmOID.RSA).getOrThrow()
             }

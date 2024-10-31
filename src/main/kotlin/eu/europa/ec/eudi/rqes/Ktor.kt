@@ -18,6 +18,7 @@ package eu.europa.ec.eudi.rqes
 import io.ktor.client.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.util.*
 import kotlinx.serialization.json.Json
 
 typealias KtorHttpClientFactory = () -> HttpClient

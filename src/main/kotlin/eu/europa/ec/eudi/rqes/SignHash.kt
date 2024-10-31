@@ -17,5 +17,10 @@ package eu.europa.ec.eudi.rqes
 
 interface SignHash {
 
-    suspend fun CredentialAuthorized.signHash(signingAlgorithmOID: SigningAlgorithmOID): Result<SignaturesList>
+    suspend fun CredentialAuthorized.SCAL1.signHash(
+        documentDigestList: DocumentDigestList,
+        signingAlgorithmOID: SigningAlgorithmOID,
+    ): Result<SignaturesList>
+
+    suspend fun CredentialAuthorized.SCAL2.signHash(signingAlgorithmOID: SigningAlgorithmOID): Result<SignaturesList>
 }

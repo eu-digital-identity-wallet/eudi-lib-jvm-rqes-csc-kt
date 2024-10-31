@@ -30,13 +30,16 @@ internal class AuthorizeCredentialImpl(
 
     override suspend fun ServiceAccessAuthorized.prepareCredentialAuthorizationRequest(
         credential: CredentialInfo,
-        documents: List<DocumentToSign>,
+        documents: List<DocumentToSign>?,
         numSignatures: Int?,
         walletState: String?,
     ): Result<CredentialAuthorizationRequestPrepared> = runCatching {
         checkNotNull(authorizationEndpointClient)
 
-        val documentDigestList = calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA_256)
+        val documentDigestList = if (credential.scal == SCAL.Two) {
+            require(documents != null) { "Documents are required for SCAL 2" }
+            calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA_256)
+        } else null
 
         val scopes = listOf(Scope(Scope.Credential.value))
         val state = walletState ?: State().value
@@ -53,7 +56,6 @@ internal class AuthorizeCredentialImpl(
         CredentialAuthorizationRequestPrepared(
             AuthorizationRequestPrepared(authorizationCodeUrl, codeVerifier, state),
             credential,
-            documentDigestList,
             authorizationDetails,
         )
     }
@@ -66,7 +68,8 @@ internal class AuthorizeCredentialImpl(
         requireNotNull(scaCalculateHashEndpointClient) {
             "SCA Calculate Hash Endpoint Client is required hash calculation"
         }
-        val hashesResponse = scaCalculateHashEndpointClient.calculateHash(documents, credential.certificate, hashAlgorithmOID)
+        val hashesResponse =
+            scaCalculateHashEndpointClient.calculateHash(documents, credential.certificate, hashAlgorithmOID)
         documents.zip(hashesResponse.hashes).map {
             DocumentDigest(Digest(it.second), it.first.file.label)
         }.let {
@@ -82,11 +85,22 @@ internal class AuthorizeCredentialImpl(
         val tokenResponse =
             tokenEndpointClient.requestAccessTokenAuthFlow(authorizationCode, value.pkceVerifier, authorizationDetails)
         val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
-        CredentialAuthorized(
-            OAuth2Tokens(accessToken, refreshToken, timestamp),
-            credential.credentialID,
-            credential.certificate,
-            documentDigestList,
-        )
+        if (credential.scal == SCAL.One) {
+            CredentialAuthorized.SCAL1(
+                OAuth2Tokens(accessToken, refreshToken, timestamp),
+                credential.credentialID,
+                credential.certificate,
+            )
+        } else {
+            requireNotNull(authorizationDetails.documentDigestList) {
+                "Document list is required for SCAL 2"
+            }
+            CredentialAuthorized.SCAL2(
+                OAuth2Tokens(accessToken, refreshToken, timestamp),
+                credential.credentialID,
+                credential.certificate,
+                authorizationDetails.documentDigestList,
+            )
+        }
     }
 }

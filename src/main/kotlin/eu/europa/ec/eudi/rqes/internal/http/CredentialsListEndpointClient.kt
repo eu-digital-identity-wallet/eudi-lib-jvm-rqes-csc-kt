@@ -88,7 +88,7 @@ internal class CredentialInfoTO(
     @SerialName("key") val key: CredentialKeyTO,
     @SerialName("cert") val certificate: CredentialKeyCertificateTO,
     @SerialName("auth") @Required val auth: CredentialAuthTO,
-    @SerialName("SCAL") val scal: String = "1",
+    @SerialName("SCAL") val scal: String? = "1",
     @SerialName("multisign") @Required val multisign: Int,
 ) {
     companion object {
@@ -123,14 +123,14 @@ internal class CredentialKeyTO(
     }
 }
 
-fun toCredentialKeyStatus(value: String) =
+private fun toCredentialKeyStatus(value: String) =
     when (value) {
         "enabled" -> CredentialKeyStatus.Enabled
         "disabled" -> CredentialKeyStatus.Disabled
         else -> throw IllegalArgumentException("Unknown credential key status: $value")
     }
 
-fun toCertificateStatus(value: String) =
+private fun toCertificateStatus(value: String) =
     when (value) {
         "valid" -> CredentialCertificateStatus.Valid
         "expired" -> CredentialCertificateStatus.Expired
@@ -139,7 +139,7 @@ fun toCertificateStatus(value: String) =
         else -> throw IllegalArgumentException("Unknown certificate status: $value")
     }
 
-fun toAuthorizationMode(value: String) =
+private fun toAuthorizationMode(value: String) =
     when (value) {
         "explicit" -> AuthorizationMode.Explicit
         "oauth2code" -> AuthorizationMode.OAuth2Code
