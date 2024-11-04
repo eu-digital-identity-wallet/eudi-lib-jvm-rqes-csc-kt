@@ -30,6 +30,7 @@ interface CSCClient :
     AuthorizeService,
     AuthorizeCredential,
     ListCredentials,
+    GetCredentialInfo,
     SignHash,
     SignDoc {
 
@@ -80,6 +81,12 @@ interface CSCClient :
                 tokenEndpointClient,
             )
 
+            val credentialsInfoEndpointClient =
+                CredentialsInfoEndpointClient(
+                    rsspMetadata.rsspId.value.value,
+                    ktorHttpClientFactory,
+                )
+
             val scaCalculateHashEndpointClient =
                 SCACalculateHashEndpointClient(
                     cscClientConfig.scaBaseURL,
@@ -89,6 +96,7 @@ interface CSCClient :
             val authorizeCredentialImpl = AuthorizeCredentialImpl(
                 authorizationEndpointClient,
                 tokenEndpointClient,
+                credentialsInfoEndpointClient,
                 scaCalculateHashEndpointClient,
             )
 
@@ -99,6 +107,8 @@ interface CSCClient :
                 )
 
             val listCredentialsImpl = ListCredentials(credentialsListEndpointClient)
+
+            val getCredentialInfoImpl = GetCredentialInfo(credentialsInfoEndpointClient)
 
             val signHashEndpointClient = SignHashEndpointClient(
                 rsspMetadata.rsspId.value.value,
@@ -125,6 +135,7 @@ interface CSCClient :
                 AuthorizeService by authorizeServiceImpl,
                 AuthorizeCredential by authorizeCredentialImpl,
                 ListCredentials by listCredentialsImpl,
+                GetCredentialInfo by getCredentialInfoImpl,
                 SignHash by signHashImpl,
                 SignDoc by signDocImpl {
                 override val rsspMetadata: RSSPMetadata = rsspMetadata

@@ -18,33 +18,35 @@ package eu.europa.ec.eudi.rqes.internal
 import com.nimbusds.oauth2.sdk.id.State
 import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.AuthorizationError.InvalidAuthorizationState
-import eu.europa.ec.eudi.rqes.internal.http.AuthorizationEndpointClient
-import eu.europa.ec.eudi.rqes.internal.http.SCACalculateHashEndpointClient
-import eu.europa.ec.eudi.rqes.internal.http.TokenEndpointClient
+import eu.europa.ec.eudi.rqes.internal.http.*
+import eu.europa.ec.eudi.rqes.internal.http.CredentialInfoTO.Success.Companion.toDomain
 
 internal class AuthorizeCredentialImpl(
     private val authorizationEndpointClient: AuthorizationEndpointClient?,
     private val tokenEndpointClient: TokenEndpointClient,
+    private val credentialsInfoEndpointClient: CredentialsInfoEndpointClient,
     private val scaCalculateHashEndpointClient: SCACalculateHashEndpointClient?,
 ) : AuthorizeCredential {
 
     override suspend fun ServiceAccessAuthorized.prepareCredentialAuthorizationRequest(
-        credential: CredentialInfo,
+        credentialID: CredentialID,
         documents: List<DocumentToSign>?,
         numSignatures: Int?,
         walletState: String?,
     ): Result<CredentialAuthorizationRequestPrepared> = runCatching {
         checkNotNull(authorizationEndpointClient)
 
+        val credential = getCredentialInfo(credentialID, tokens.accessToken)
+
         val documentDigestList = if (credential.scal == SCAL.Two) {
-            require(documents != null) { "Documents are required for SCAL 2" }
+            require(documents != null) { "Document list is required for SCAL 2" }
             calculateDocumentHash(documents, credential, HashAlgorithmOID.SHA_256)
         } else null
 
         val scopes = listOf(Scope(Scope.Credential.value))
         val state = walletState ?: State().value
         val authorizationDetails = AuthorizationDetails(
-            CredentialRef.ByCredentialID(credential.credentialID),
+            CredentialRef.ByCredentialID(credentialID),
             numSignatures,
             documentDigestList,
         )
@@ -58,6 +60,21 @@ internal class AuthorizeCredentialImpl(
             credential,
             authorizationDetails,
         )
+    }
+
+    private suspend fun getCredentialInfo(credentialID: CredentialID, accessToken: AccessToken): CredentialInfo {
+        val credentialInfoTO = credentialsInfoEndpointClient.credentialInfo(
+            CredentialsInfoRequest(credentialID),
+            accessToken,
+        ).getOrThrow()
+
+        return when (credentialInfoTO) {
+            is CredentialInfoTO.Success -> {
+                credentialInfoTO.toDomain(credentialID)
+            }
+
+            else -> throw IllegalStateException("Unexpected response: $credentialInfoTO")
+        }
     }
 
     private suspend fun calculateDocumentHash(
@@ -80,11 +97,15 @@ internal class AuthorizeCredentialImpl(
     override suspend fun CredentialAuthorizationRequestPrepared.authorizeWithAuthorizationCode(
         authorizationCode: AuthorizationCode,
         serverState: String,
+        authDetailsOption: AccessTokenOption,
     ): Result<CredentialAuthorized> = runCatching {
         ensure(serverState == value.state) { InvalidAuthorizationState() }
+
         val tokenResponse =
             tokenEndpointClient.requestAccessTokenAuthFlow(authorizationCode, value.pkceVerifier, authorizationDetails)
+
         val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
+
         if (credential.scal == SCAL.One) {
             CredentialAuthorized.SCAL1(
                 OAuth2Tokens(accessToken, refreshToken, timestamp),

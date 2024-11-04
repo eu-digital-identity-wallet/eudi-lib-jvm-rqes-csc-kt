@@ -111,7 +111,7 @@ fun main() {
 
             // initiate the credential authorization request flow
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
-                prepareCredentialAuthorizationRequest(credentials.first(), listOf(documentToSign)).getOrThrow()
+                prepareCredentialAuthorizationRequest(credentials.first().credentialID, listOf(documentToSign)).getOrThrow()
             }
 
             println("Use the following URL to authenticate:")

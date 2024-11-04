@@ -72,6 +72,8 @@ internal sealed interface TokenResponseTO {
                     ),
                     refreshToken = refreshToken?.let { RefreshToken(it, 0) },
                     timestamp = clock.instant(),
+                    credentialID = credentialID?.let { CredentialID(it) },
+                    authorizationDetails = null,
                 )
             }
 

@@ -41,11 +41,16 @@ sealed interface CredentialAuthorized : java.io.Serializable {
     ) : CredentialAuthorized
 }
 
+sealed interface AccessTokenOption {
+
+    data object AsRequested : AccessTokenOption
+}
+
 interface AuthorizeCredential {
 
     /**
      * Initial step for the credential authorization process using the Authorization code flow.
-     * @param credential the credential to be authorized
+     * @param credentialID the credential to be authorized
      * @param documents the documents for which the credential is to be authorized
      * @param numSignatures the number of signatures to be authorized for the credential
      * @param walletState an optional parameter that if provided will be included in the authorization request.
@@ -54,7 +59,7 @@ interface AuthorizeCredential {
      * @return an HTTPS URL of the authorization request to be placed
      */
     suspend fun ServiceAccessAuthorized.prepareCredentialAuthorizationRequest(
-        credential: CredentialInfo,
+        credentialID: CredentialID,
         documents: List<DocumentToSign>?,
         numSignatures: Int? = 1,
         walletState: String? = null,
@@ -73,5 +78,6 @@ interface AuthorizeCredential {
     suspend fun CredentialAuthorizationRequestPrepared.authorizeWithAuthorizationCode(
         authorizationCode: AuthorizationCode,
         serverState: String,
+        authDetailsOption: AccessTokenOption = AccessTokenOption.AsRequested,
     ): Result<CredentialAuthorized>
 }

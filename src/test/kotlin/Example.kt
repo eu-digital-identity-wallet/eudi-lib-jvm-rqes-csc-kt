@@ -117,7 +117,7 @@ fun main() {
 
             // retrieve the credentials from the RSSP
             val credentials = with(authorizedServiceRequest) {
-                listCredentials(CredentialsListRequest(certificates = Certificates.Chain)).getOrThrow()
+                listCredentials(CredentialsListRequest()).getOrThrow()
             }
 
             val documentToSign = DocumentToSign(
@@ -137,7 +137,7 @@ fun main() {
             // initiate the credential authorization request flow
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
                 prepareCredentialAuthorizationRequest(
-                    credentials.first(),
+                    credentials.first().credentialID,
                     listOf(documentToSign),
                     1,
                     walletState,

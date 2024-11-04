@@ -18,7 +18,6 @@ package eu.europa.ec.eudi.rqes.internal.http
 import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.internal.http.AuthenticationObjectTO.Companion.toDomain
 import eu.europa.ec.eudi.rqes.internal.http.CredentialAuthTO.Companion.toDomain
-import eu.europa.ec.eudi.rqes.internal.http.CredentialInfoTO.Companion.toDomain
 import eu.europa.ec.eudi.rqes.internal.http.CredentialKeyCertificateTO.Companion.toDomain
 import eu.europa.ec.eudi.rqes.internal.http.CredentialKeyTO.Companion.toDomain
 import io.ktor.client.call.*
@@ -63,15 +62,9 @@ internal sealed interface CredentialsListTO {
     @Serializable
     data class Success(
         @SerialName("credentialIDs") @Required val credentialIds: List<String>,
-        @SerialName("credentialInfos") val credentialInfos: List<CredentialInfoTO>? = null,
+        @SerialName("credentialInfos") val credentialInfos: List<ListCredentialInfoTO>? = null,
         @SerialName("onlyValid") val onlyValid: Boolean? = null,
-    ) : CredentialsListTO {
-        companion object {
-            fun Success.toDomain(): List<CredentialInfo> {
-                return credentialInfos?.map { it.toDomain() } ?: emptyList()
-            }
-        }
-    }
+    ) : CredentialsListTO
 
     @Serializable
     data class Failure(
@@ -81,7 +74,7 @@ internal sealed interface CredentialsListTO {
 }
 
 @Serializable
-internal class CredentialInfoTO(
+internal class ListCredentialInfoTO(
     @SerialName("credentialID") @Required val credentialId: String,
     @SerialName("description") val description: String? = null,
     @SerialName("signatureQualifier") val signatureQualifier: String? = null,
@@ -90,9 +83,10 @@ internal class CredentialInfoTO(
     @SerialName("auth") @Required val auth: CredentialAuthTO,
     @SerialName("SCAL") val scal: String? = "1",
     @SerialName("multisign") @Required val multisign: Int,
+    @SerialName("lang") val lang: String? = null,
 ) {
     companion object {
-        fun CredentialInfoTO.toDomain(): CredentialInfo = CredentialInfo(
+        fun ListCredentialInfoTO.toDomain(): CredentialInfo = CredentialInfo(
             credentialID = CredentialID(credentialId),
             description = description?.let { CredentialDescription(it) },
             signatureQualifier = signatureQualifier?.let { SignatureQualifier(it) },
@@ -247,14 +241,14 @@ internal class AuthenticationObjectTO(
 }
 
 internal class CredentialsListEndpointClient(
-    private val credentialsListEndpoint: URL,
+    private val rsspBaseURL: URL,
     private val ktorHttpClientFactory: KtorHttpClientFactory,
 ) {
 
     suspend fun listCredentials(request: CredentialsListRequest, accessToken: AccessToken): Result<CredentialsListTO> =
         runCatching {
             ktorHttpClientFactory().use { client ->
-                val response = client.post("$credentialsListEndpoint/credentials/list") {
+                val response = client.post("$rsspBaseURL/credentials/list") {
                     bearerAuth(accessToken.accessToken)
                     contentType(ContentType.Application.Json)
                     setBody(CredentialsListRequestTO.from(request))

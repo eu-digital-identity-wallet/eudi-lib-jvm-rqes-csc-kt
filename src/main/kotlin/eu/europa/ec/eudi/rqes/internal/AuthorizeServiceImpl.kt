@@ -27,6 +27,8 @@ internal data class TokenResponse(
     val accessToken: AccessToken,
     val refreshToken: RefreshToken?,
     val timestamp: Instant,
+    val credentialID: CredentialID?,
+    val authorizationDetails: AuthorizationDetails?,
 )
 
 internal class AuthorizeServiceImpl(
