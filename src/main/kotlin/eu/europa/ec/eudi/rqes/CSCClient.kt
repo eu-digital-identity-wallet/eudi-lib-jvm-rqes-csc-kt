@@ -15,16 +15,8 @@
  */
 package eu.europa.ec.eudi.rqes
 
-import eu.europa.ec.eudi.rqes.internal.AuthorizeCredentialImpl
-import eu.europa.ec.eudi.rqes.internal.AuthorizeServiceImpl
-import eu.europa.ec.eudi.rqes.internal.SignDocImpl
-import eu.europa.ec.eudi.rqes.internal.SignHashImpl
+import eu.europa.ec.eudi.rqes.internal.*
 import eu.europa.ec.eudi.rqes.internal.http.*
-import eu.europa.ec.eudi.rqes.internal.http.AuthorizationEndpointClient
-import eu.europa.ec.eudi.rqes.internal.http.CredentialsListEndpointClient
-import eu.europa.ec.eudi.rqes.internal.http.SCACalculateHashEndpointClient
-import eu.europa.ec.eudi.rqes.internal.http.SCAObtainSignedDocEndpointClient
-import eu.europa.ec.eudi.rqes.internal.http.TokenEndpointClient
 
 interface CSCClient :
     AuthorizeService,
@@ -32,7 +24,9 @@ interface CSCClient :
     ListCredentials,
     GetCredentialInfo,
     SignHash,
-    SignDoc {
+    SignDoc,
+    GetSignedDocuments,
+    CalculateDocumentHashes {
 
     val rsspMetadata: RSSPMetadata
 
@@ -97,7 +91,6 @@ interface CSCClient :
                 authorizationEndpointClient,
                 tokenEndpointClient,
                 credentialsInfoEndpointClient,
-                scaCalculateHashEndpointClient,
             )
 
             val credentialsListEndpointClient =
@@ -119,6 +112,10 @@ interface CSCClient :
                 signHashEndpointClient,
             )
 
+            val calculateDocumentHashesImpl = CalculateDocumentHashesImpl(
+                scaCalculateHashEndpointClient,
+            )
+
             val scaObtainSignedDocEndpointClient =
                 SCAObtainSignedDocEndpointClient(
                     cscClientConfig.scaBaseURL,
@@ -127,8 +124,9 @@ interface CSCClient :
 
             val signDocImpl = SignDocImpl(
                 signHashEndpointClient,
-                scaObtainSignedDocEndpointClient,
             )
+
+            val embedSignatureImpl = GetSignedDocumentsImpl(scaObtainSignedDocEndpointClient)
 
             object :
                 CSCClient,
@@ -137,7 +135,9 @@ interface CSCClient :
                 ListCredentials by listCredentialsImpl,
                 GetCredentialInfo by getCredentialInfoImpl,
                 SignHash by signHashImpl,
-                SignDoc by signDocImpl {
+                SignDoc by signDocImpl,
+                GetSignedDocuments by embedSignatureImpl,
+                CalculateDocumentHashes by calculateDocumentHashesImpl {
                 override val rsspMetadata: RSSPMetadata = rsspMetadata
             }
         }

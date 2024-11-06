@@ -16,12 +16,10 @@
 package eu.europa.ec.eudi.rqes.internal
 
 import eu.europa.ec.eudi.rqes.*
-import eu.europa.ec.eudi.rqes.internal.http.SCAObtainSignedDocEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.SignHashEndpointClient
 
 internal class SignDocImpl(
     private val signHashEndpointClient: SignHashEndpointClient,
-    private val scaObtainSignedDocEndpointClient: SCAObtainSignedDocEndpointClient,
 ) : SignDoc {
 
     override suspend fun CredentialAuthorized.SCAL1.signDoc(
@@ -57,22 +55,6 @@ internal class SignDocImpl(
         accessToken: AccessToken,
         credentialCertificate: CredentialCertificate,
     ): Result<SignDocResponse> = runCatching {
-        val signatures: SignaturesList = signHashEndpointClient.signHashes(
-            credentialID,
-            documentDigestList.documentDigests.map(DocumentDigest::hash).map { it.value },
-            documentDigestList.hashAlgorithmOID,
-            signingAlgorithmOID,
-            accessToken,
-        )
-
-        val scaSignedDoc = scaObtainSignedDocEndpointClient.obtainSignedDoc(
-            documents,
-            credentialCertificate,
-            documentDigestList.hashAlgorithmOID,
-            signatures.signatures,
-            documentDigestList.timestamp,
-        )
-
-        SignDocResponse(scaSignedDoc.documentWithSignature, scaSignedDoc.signatures, null)
+        TODO("Not implemented yet")
     }
 }

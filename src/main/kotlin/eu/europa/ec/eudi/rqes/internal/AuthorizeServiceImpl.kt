@@ -19,7 +19,6 @@ import eu.europa.ec.eudi.rqes.*
 import eu.europa.ec.eudi.rqes.AuthorizationError.InvalidAuthorizationState
 import eu.europa.ec.eudi.rqes.internal.http.AuthorizationEndpointClient
 import eu.europa.ec.eudi.rqes.internal.http.TokenEndpointClient
-import java.time.Clock
 import java.time.Instant
 import com.nimbusds.oauth2.sdk.id.State as NimbusState
 
@@ -28,7 +27,7 @@ internal data class TokenResponse(
     val refreshToken: RefreshToken?,
     val timestamp: Instant,
     val credentialID: CredentialID?,
-    val authorizationDetails: AuthorizationDetails?,
+    val credentialAuthorizationSubject: CredentialAuthorizationSubject?,
 )
 
 internal class AuthorizeServiceImpl(
@@ -57,11 +56,11 @@ internal class AuthorizeServiceImpl(
             val tokenResponse = tokenEndpointClient.requestAccessTokenAuthFlow(
                 authorizationCode,
                 value.pkceVerifier,
-                authorizationDetails = null,
+                credentialAuthorizationRequestType = null,
             )
             val (accessToken, refreshToken, timestamp) = tokenResponse.getOrThrow()
 
-            ServiceAccessAuthorized(OAuth2Tokens(accessToken, null, Clock.systemUTC().instant().plusSeconds(600)))
+            ServiceAccessAuthorized(OAuth2Tokens(accessToken, refreshToken, timestamp))
         }
 
     override suspend fun authorizeWithClientCredentials(): Result<ServiceAccessAuthorized> = runCatching {

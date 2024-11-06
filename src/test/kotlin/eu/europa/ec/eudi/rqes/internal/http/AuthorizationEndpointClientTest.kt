@@ -35,7 +35,7 @@ class AuthorizationEndpointClientTest {
         val hash2 = "MYIBAzAYBgkqhkiG9w0BC="
 
         val endpoint = AuthorizationEndpointClient(
-            URI("http://localhost:8084/oauth2/authorize").toURL(),
+            URI("https://localhost:8084/oauth2/authorize").toURL(),
             null,
             CSCClientConfig(
                 client = OAuth2Client.Public("wallet-client-tester"),
@@ -49,9 +49,8 @@ class AuthorizationEndpointClientTest {
         // When
         val result = endpoint.submitParOrCreateAuthorizationRequestUrl(
             listOf(Scope.Credential),
-            AuthorizationDetails(
+            CredentialAuthorizationSubject(
                 CredentialRef.ByCredentialID(credentialID),
-                1,
                 DocumentDigestList(
                     listOf(
                         DocumentDigest(
@@ -66,12 +65,13 @@ class AuthorizationEndpointClientTest {
                     HashAlgorithmOID.SHA_256,
                     Instant.now(),
                 ),
+                1,
             ),
             "state",
         ).getOrThrow()
 
         // Assert
-        assertTrue(result.second.value.toString().startsWith("http://localhost:8084/oauth2/authorize"))
+        assertTrue(result.second.value.toString().startsWith("https://localhost:8084/oauth2/authorize"))
         assertTrue(result.second.value.toString().contains(URLEncoder.encode(hash1, Charsets.UTF_8)))
         assertTrue(result.second.value.toString().contains(URLEncoder.encode(credentialID.value, Charsets.UTF_8)))
     }

@@ -210,7 +210,7 @@ class AuthorizeServiceTest {
         val cscClient = CSCClient.oauth2(
             rsspMetadata = rsspMetadata().withClientCredentialsFlow(),
             cscClientConfig = CSCClientConfig(
-                client = OAuth2Client.Confidential.PasswordProtected("client-id", "client-secret"),
+                client = OAuth2Client.Confidential.ClientSecretPost("client-id", "client-secret"),
                 authFlowRedirectionURI = URI("https://example.com/redirect"),
                 URI("https://walletcentric.signer.eudiw.dev").toURL(),
                 parUsage = ParUsage.Required,

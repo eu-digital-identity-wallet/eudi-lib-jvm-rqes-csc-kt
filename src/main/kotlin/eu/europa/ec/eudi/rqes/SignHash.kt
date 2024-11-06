@@ -17,10 +17,21 @@ package eu.europa.ec.eudi.rqes
 
 interface SignHash {
 
+    /**
+     * Signs the hash of the given document digest list using the given signing algorithm OID.
+     * @param documentDigestList the document digests to sign
+     * @param signingAlgorithmOID the signing algorithm OID to use
+     * @return the list of signatures
+     */
     suspend fun CredentialAuthorized.SCAL1.signHash(
         documentDigestList: DocumentDigestList,
         signingAlgorithmOID: SigningAlgorithmOID,
     ): Result<SignaturesList>
 
+    /**
+     * Signs the hash of the given document digest list using the given signing algorithm OID.
+     * @param signingAlgorithmOID the signing algorithm OID to use
+     * @return the list of signatures
+     */
     suspend fun CredentialAuthorized.SCAL2.signHash(signingAlgorithmOID: SigningAlgorithmOID): Result<SignaturesList>
 }

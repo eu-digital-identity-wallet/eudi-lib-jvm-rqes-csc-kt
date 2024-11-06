@@ -17,13 +17,13 @@ package eu.europa.ec.eudi.rqes.internal
 
 import com.nimbusds.oauth2.sdk.rar.AuthorizationDetail
 import com.nimbusds.oauth2.sdk.rar.AuthorizationType
-import eu.europa.ec.eudi.rqes.AuthorizationDetails
+import eu.europa.ec.eudi.rqes.CredentialAuthorizationSubject
 import eu.europa.ec.eudi.rqes.CredentialRef
 import eu.europa.ec.eudi.rqes.Scope
 import net.minidev.json.JSONArray
 import net.minidev.json.JSONObject
 
-internal fun AuthorizationDetails.toNimbusAuthDetail(): AuthorizationDetail {
+internal fun CredentialAuthorizationSubject.toNimbusAuthDetail(): AuthorizationDetail {
     val hashesArray = documentDigestList?.let {
         val docDigests = JSONArray()
         it.documentDigests.forEach() { documentDigest ->
@@ -46,6 +46,5 @@ internal fun AuthorizationDetails.toNimbusAuthDetail(): AuthorizationDetail {
             field("documentDigests", hashesArray)
             field("hashAlgorithmOID", it.hashAlgorithmOID.value)
         }
-        locations?.let { field("locations", it) }
     }.build()
 }

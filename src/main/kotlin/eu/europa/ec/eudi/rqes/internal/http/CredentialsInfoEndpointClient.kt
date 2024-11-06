@@ -57,7 +57,7 @@ internal sealed interface CredentialInfoTO {
         @SerialName("key") val key: CredentialKeyTO,
         @SerialName("cert") val certificate: CredentialKeyCertificateTO,
         @SerialName("auth") @Required val auth: CredentialAuthTO,
-        @SerialName("SCAL") val scal: String? = "1",
+        @SerialName("scal") val scal: String? = "1",
         @SerialName("multisign") @Required val multisign: Int,
         @SerialName("lang") val lang: String? = null,
     ) : CredentialInfoTO {

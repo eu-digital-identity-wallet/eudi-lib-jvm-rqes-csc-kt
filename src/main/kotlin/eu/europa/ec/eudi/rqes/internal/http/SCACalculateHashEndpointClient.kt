@@ -196,13 +196,11 @@ internal class SCACalculateHashEndpointClient(
 internal fun InputStream.toBase64(): String {
     val buffer = ByteArray(8192) // 8KB buffer
     val outputStream = ByteArrayOutputStream()
-    val base64Encoder = Base64.getEncoder().wrap(outputStream)
-
-    var bytesRead: Int
-    while (this.read(buffer).also { bytesRead = it } != -1) {
-        base64Encoder.write(buffer, 0, bytesRead)
+    Base64.getEncoder().wrap(outputStream).use { it ->
+        var bytesRead: Int
+        while (this.read(buffer).also { bytesRead = it } != -1) {
+            it.write(buffer, 0, bytesRead)
+        }
     }
-
-    base64Encoder.close()
     return outputStream.toString("UTF-8")
 }

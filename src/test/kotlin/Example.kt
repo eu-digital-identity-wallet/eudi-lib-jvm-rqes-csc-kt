@@ -16,8 +16,6 @@
 import eu.europa.ec.eudi.rqes.*
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
@@ -64,14 +62,6 @@ private val unsafeHttpClientFactory: KtorHttpClientFactory = {
                 json = JsonSupport,
             )
         }
-        install(Auth) {
-            basic {
-                credentials {
-                    BasicAuthCredentials(username = client_id, password = client_secret)
-                }
-                realm = "Access to the '/' path"
-            }
-        }
         install(Logging) {
             level = LogLevel.ALL
         }
@@ -83,10 +73,11 @@ private val unsafeHttpClientFactory: KtorHttpClientFactory = {
 }
 
 private var cscClientConfig = CSCClientConfig(
-    OAuth2Client.Confidential.PasswordProtected(client_id, client_secret),
+    OAuth2Client.Confidential.ClientSecretBasic(client_id, client_secret),
     URI("https://oauthdebugger.com/debug"),
     URI("https://walletcentric.signer.eudiw.dev").toURL(),
     ParUsage.IfSupported,
+    RarUsage.IfSupported,
 )
 
 fun main() {
@@ -115,7 +106,7 @@ fun main() {
                 authorizeWithAuthorizationCode(serviceAuthorizationCode, walletState).getOrThrow()
             }
 
-            // retrieve the credentials from the RSSP
+            // retrieve the list of credentials from the RSSP
             val credentials = with(authorizedServiceRequest) {
                 listCredentials(CredentialsListRequest()).getOrThrow()
             }
@@ -134,17 +125,26 @@ fun main() {
 
             walletState = UUID.randomUUID().toString()
 
-            // initiate the credential authorization request flow
+            // calculate the hash of the document to sign
+            val documentDigests = calculateDocumentHashes(
+                listOf(documentToSign),
+                credentials.first().certificate,
+                HashAlgorithmOID.SHA_256,
+            )
+
+            // initiate the credential authorization request flow, using the hashes calculated above
             val credAuthRequestPrepared = with(authorizedServiceRequest) {
                 prepareCredentialAuthorizationRequest(
-                    credentials.first().credentialID,
-                    listOf(documentToSign),
-                    1,
+                    CredentialAuthorizationSubject(
+                        CredentialRef.ByCredentialID(credentials.first().credentialID),
+                        documentDigests,
+                        1,
+                    ),
                     walletState,
                 ).getOrThrow()
             }
 
-            println("Use the following URL to authenticate:\n${credAuthRequestPrepared.value.authorizationCodeURL}")
+            println("Use the following URL to authenticate:\n${credAuthRequestPrepared.authorizationRequestPrepared.authorizationCodeURL}")
             println("Enter the credential authorization code:")
             val credentialAuthorizationCode = AuthorizationCode(readln())
 
@@ -158,13 +158,21 @@ fun main() {
 
             require(credentialAuthorized is CredentialAuthorized.SCAL2)
 
-            val signedDoc = with(credentialAuthorized) {
-                signDoc(listOf(documentToSign), SigningAlgorithmOID.RSA).getOrThrow()
+            val signedFiles = with(credentialAuthorized) {
+                // sign the hashes of the documents
+                val signatures = signHash(SigningAlgorithmOID.RSA).getOrThrow()
+
+                // get the signed documents using the signatures
+                getSignedDocuments(
+                    listOf(documentToSign),
+                    signatures.signatures,
+                    credentialCertificate,
+                    documentDigestList.hashAlgorithmOID,
+                    documentDigestList.hashCalculationTime,
+                )
             }
 
-            val s = signedDoc.documentWithSignature[0]
-
-            File("signed.pdf").writeBytes(Base64.getDecoder().decode(s))
+            File("signed.pdf").writeBytes(Base64.getDecoder().decode(signedFiles[0].readAllBytes()))
         }
     }
 }
