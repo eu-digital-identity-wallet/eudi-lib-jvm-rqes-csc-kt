@@ -133,16 +133,14 @@ fun main() {
             )
 
             // initiate the credential authorization request flow, using the hashes calculated above
-            val credAuthRequestPrepared = with(authorizedServiceRequest) {
-                prepareCredentialAuthorizationRequest(
-                    CredentialAuthorizationSubject(
-                        CredentialRef.ByCredentialID(credentials.first().credentialID),
-                        documentDigests,
-                        1,
-                    ),
-                    walletState,
-                ).getOrThrow()
-            }
+            val credAuthRequestPrepared = prepareCredentialAuthorizationRequest(
+                CredentialAuthorizationSubject(
+                    CredentialRef.ByCredentialID(credentials.first().credentialID),
+                    documentDigests,
+                    1,
+                ),
+                walletState,
+            ).getOrThrow()
 
             println("Use the following URL to authenticate:\n${credAuthRequestPrepared.authorizationRequestPrepared.authorizationCodeURL}")
             println("Enter the credential authorization code:")

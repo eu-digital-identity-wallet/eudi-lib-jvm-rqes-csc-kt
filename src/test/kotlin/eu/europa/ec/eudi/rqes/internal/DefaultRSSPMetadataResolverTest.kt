@@ -19,9 +19,12 @@ import eu.europa.ec.eudi.rqes.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.util.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 internal class DefaultRSSPMetadataResolverTest {
 
+    @Test
     fun `resolution success`() = runTest {
         val rsspId = SampleRSSP.Id
 
@@ -32,7 +35,8 @@ internal class DefaultRSSPMetadataResolverTest {
             ),
         )
         val metaData = assertDoesNotThrow { resolver.resolve(rsspId, Locale.forLanguageTag("en-US")).getOrThrow() }
-        // TODO assert metaData
+
+        assertEquals(SampleRSSP.Id, metaData.rsspId)
     }
 }
 

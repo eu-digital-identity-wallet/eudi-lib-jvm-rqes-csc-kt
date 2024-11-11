@@ -18,11 +18,53 @@ package eu.europa.ec.eudi.rqes
 import eu.europa.ec.eudi.rqes.internal.asMetadata
 import io.ktor.http.*
 import java.net.URI
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 object SampleRSSP {
     val Id: RSSPId = RSSPId("https://rssp.example.com/csc/v2").getOrThrow()
 }
+
+internal fun mockPublicClient(
+    ktorHttpClientFactory: KtorHttpClientFactory,
+    parUsage: ParUsage = ParUsage.Never,
+    rarUsage: RarUsage = RarUsage.IfSupported,
+) =
+    mockClient(
+        OAuth2Client.Public("client-id"),
+        ktorHttpClientFactory,
+        parUsage,
+        rarUsage,
+    )
+
+internal fun mockConfidentialClient(
+    ktorHttpClientFactory: KtorHttpClientFactory,
+    parUsage: ParUsage = ParUsage.Never,
+    rarUsage: RarUsage = RarUsage.IfSupported,
+) = mockClient(
+    OAuth2Client.Confidential.ClientSecretPost("client-id", "secret"),
+    ktorHttpClientFactory,
+    parUsage,
+    rarUsage,
+)
+
+private fun mockClient(
+    oauth2Client: OAuth2Client,
+    ktorHttpClientFactory: KtorHttpClientFactory,
+    parUsage: ParUsage = ParUsage.Never,
+    rarUsage: RarUsage = RarUsage.IfSupported,
+) = CSCClient.oauth2(
+    rsspMetadata = rsspMetadata(),
+    cscClientConfig = CSCClientConfig(
+        oauth2Client,
+        URI("https://example.com/redirect"),
+        URI("https://walletcentric.signer.eudiw.dev").toURL(),
+        parUsage,
+        rarUsage,
+    ),
+    ktorHttpClientFactory = ktorHttpClientFactory,
+).getOrThrow()
 
 internal fun RSSPId.info() = HttpsUrl(
     URLBuilder(toString()).appendPathSegments("/info", encodeSlash = false).buildString(),
@@ -82,3 +124,38 @@ private val methods = listOf(
 
 private val authorizationServerMetadata =
     asMetadata(HttpsUrl("https://auth.domain.org").getOrThrow(), methods)
+
+internal val mockServiceAccessAuthorized = ServiceAccessAuthorized(
+    OAuth2Tokens(
+        accessToken = AccessToken(UUID.randomUUID().toString(), Duration.ofSeconds(600)),
+        RefreshToken(UUID.randomUUID().toString(), Duration.ofSeconds(600)),
+        timestamp = Instant.now(),
+    ),
+)
+
+internal fun mockCredentialAuthorizedSCAL1(
+    credentialInfo: CredentialInfo,
+    documentDigestList: DocumentDigestList,
+) = CredentialAuthorized.SCAL1(
+    OAuth2Tokens(
+        accessToken = AccessToken(UUID.randomUUID().toString(), Duration.ofSeconds(600)),
+        RefreshToken(UUID.randomUUID().toString(), Duration.ofSeconds(600)),
+        timestamp = Instant.now(),
+    ),
+    credentialInfo.credentialID,
+    credentialInfo.certificate,
+)
+
+internal fun mockCredentialAuthorizedSCAL2(
+    credentialInfo: CredentialInfo,
+    documentDigestList: DocumentDigestList,
+) = CredentialAuthorized.SCAL2(
+    OAuth2Tokens(
+        accessToken = AccessToken(UUID.randomUUID().toString(), Duration.ofSeconds(600)),
+        RefreshToken(UUID.randomUUID().toString(), Duration.ofSeconds(600)),
+        timestamp = Instant.now(),
+    ),
+    credentialInfo.credentialID,
+    credentialInfo.certificate,
+    documentDigestList,
+)
