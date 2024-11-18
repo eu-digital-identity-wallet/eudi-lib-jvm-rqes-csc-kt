@@ -16,7 +16,6 @@
 package eu.europa.ec.eudi.rqes
 
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import kotlin.test.*
 
 class CalculateDocumentHashesTest {
@@ -30,22 +29,11 @@ class CalculateDocumentHashesTest {
         )
 
         with(mockPublicClient(mockedKtorHttpClientFactory)) {
-            val documentsToSign = listOf(
-                DocumentToSign(
-                    Document(File(ClassLoader.getSystemResource("sample.pdf").path), "test.pdf"),
-                    SignatureFormat.P,
-                    ConformanceLevel.ADES_B_B,
-                    SigningAlgorithmOID.RSA_SHA256,
-                    SignedEnvelopeProperty.ENVELOPED,
-                    ASICContainer.NONE,
-                ),
-            )
-
             val documentDigestList = with(mockServiceAccessAuthorized) {
                 val credential = credentialInfo(CredentialsInfoRequest(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"))).getOrThrow()
 
                 calculateDocumentHashes(
-                    documentsToSign,
+                    mockDocumentsToSign,
                     credential.certificate,
                     HashAlgorithmOID.SHA_256,
                 )

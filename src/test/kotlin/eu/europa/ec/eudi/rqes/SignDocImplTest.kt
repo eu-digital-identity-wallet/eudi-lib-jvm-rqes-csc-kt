@@ -16,40 +16,45 @@
 package eu.europa.ec.eudi.rqes
 
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class CredentialInfoTest {
+class SignDocImplTest {
 
     @Test
-    fun `successful credential info retrieval with oauth2code auth mode`() = runTest {
+    fun `successful doc signing with a SCAL1 credential`() = runTest {
         val mockedKtorHttpClientFactory = mockedKtorHttpClientFactory(
             authServerWellKnownMocker(),
-            credentialsInfoPostMocker(),
         )
 
         with(mockPublicClient(mockedKtorHttpClientFactory)) {
-            val credentialInfo = with(mockServiceAccessAuthorized) {
-                credentialInfo(CredentialsInfoRequest(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"))).getOrThrow()
+            with(mockCredentialAuthorizedSCAL1()) {
+                assertThrows<NotImplementedError> {
+                    signDoc(
+                        mockDocumentsToSign,
+                        mockDocumentDigestList,
+                        SigningAlgorithmOID.RSA,
+                    ).getOrThrow()
+                }
             }
-
-            assertEquals(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"), credentialInfo.credentialID)
         }
     }
 
     @Test
-    fun `successful credential info retrieval with explicit auth mode`() = runTest {
+    fun `successful doc signing with a SCAL2 credential`() = runTest {
         val mockedKtorHttpClientFactory = mockedKtorHttpClientFactory(
             authServerWellKnownMocker(),
-            credentialsInfoPostMocker("eu/europa/ec/eudi/rqes/internal/credentials_info_scal2_explicit_valid.json"),
         )
 
         with(mockPublicClient(mockedKtorHttpClientFactory)) {
-            val credentialInfo = with(mockServiceAccessAuthorized) {
-                credentialInfo(CredentialsInfoRequest(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"))).getOrThrow()
+            with(mockCredentialAuthorizedSCAL2()) {
+                assertThrows<NotImplementedError> {
+                    signDoc(
+                        mockDocumentsToSign,
+                        SigningAlgorithmOID.RSA,
+                    ).getOrThrow()
+                }
             }
-
-            assertEquals(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"), credentialInfo.credentialID)
         }
     }
 }

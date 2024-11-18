@@ -16,8 +16,8 @@
 package eu.europa.ec.eudi.rqes
 
 import kotlinx.coroutines.test.runTest
-import java.util.*
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ListCredentialsTest {
 
@@ -28,11 +28,13 @@ class ListCredentialsTest {
             credentialsListPostMocker(),
         )
 
-        with(mockPublicClient(mockedKtorHttpClientFactory)) {
+        val credentialsList = with(mockPublicClient(mockedKtorHttpClientFactory)) {
             with(mockServiceAccessAuthorized) {
-                val credentialsList = listCredentials(CredentialsListRequest()).getOrThrow()
-                println(credentialsList)
+                listCredentials(CredentialsListRequest()).getOrThrow()
             }
         }
+
+        assertEquals(1, credentialsList.size)
+        assertEquals("83c7c559-db74-48da-aacc-d439d415cb81", credentialsList[0].credentialID.value)
     }
 }

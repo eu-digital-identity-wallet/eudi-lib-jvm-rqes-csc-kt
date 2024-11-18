@@ -104,7 +104,7 @@ internal fun credentialsListPostMocker(validator: (request: HttpRequestData) -> 
     )
 
 internal fun credentialsInfoPostMocker(
-    resource: String = "eu/europa/ec/eudi/rqes/internal/credentials_info_oauth_valid.json",
+    resource: String = "eu/europa/ec/eudi/rqes/internal/credentials_info_scal2_oauth_valid.json",
     validator: (request: HttpRequestData) -> Unit = {},
 ): RequestMocker =
     RequestMocker(

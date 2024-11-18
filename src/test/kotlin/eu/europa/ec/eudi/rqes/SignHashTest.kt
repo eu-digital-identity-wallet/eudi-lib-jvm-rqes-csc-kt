@@ -15,9 +15,15 @@
  */
 package eu.europa.ec.eudi.rqes
 
+import eu.europa.ec.eudi.rqes.internal.http.SignHashRequestTO
+import io.ktor.client.engine.mock.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import java.time.Instant
-import kotlin.test.*
+import kotlinx.serialization.json.Json
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class SignHashTest {
 
@@ -26,27 +32,57 @@ class SignHashTest {
         val mockedKtorHttpClientFactory = mockedKtorHttpClientFactory(
             authServerWellKnownMocker(),
             credentialsInfoPostMocker(),
-            signHashPostMocker(),
+            signHashPostMocker() { request ->
+                runBlocking {
+                    assertNotNull(
+                        request.headers["Authorization"],
+                        "Authorization header is missing in the request",
+                    )
+
+                    assertEquals(
+                        HttpMethod.Post,
+                        request.method,
+                        "Request method is not POST",
+                    )
+
+                    assertNotNull(
+                        request.body,
+                        "Request body is missing",
+                    )
+
+                    val requestBody = request.body.toByteArray().toString(Charsets.UTF_8)
+                    val signHashRequest = Json.decodeFromString<SignHashRequestTO>(requestBody)
+
+                    assertEquals(
+                        mockCredential.credentialID.value,
+                        signHashRequest.credentialID,
+                        "Credential ID is not the expected one",
+                    )
+
+                    assertEquals(
+                        mockDocumentDigestList.hashAlgorithmOID.value,
+                        signHashRequest.hashAlgorithmOID,
+                        "Hash algorithm OID not the expected one",
+                    )
+
+                    assertEquals(
+                        SigningAlgorithmOID.RSA.value,
+                        signHashRequest.signAlgorithmOID,
+                        "Signing algorithm OID not the expected one",
+                    )
+
+                    assertEquals(
+                        mockDocumentDigestList.documentDigests[0].hash.value,
+                        signHashRequest.hashes[0],
+                        "Hash value is not the expected one",
+                    )
+                }
+            },
         )
 
         val signatures = with(mockPublicClient(mockedKtorHttpClientFactory)) {
-            val credential = with(mockServiceAccessAuthorized) {
-                credentialInfo(CredentialsInfoRequest(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"))).getOrThrow()
-            }
-
-            val documentDigestList = DocumentDigestList(
-                hashAlgorithmOID = HashAlgorithmOID.SHA_256,
-                hashCalculationTime = Instant.ofEpochMilli(1731313375117),
-                documentDigests = listOf(
-                    DocumentDigest(
-                        hash = Digest("MYIBAzAYBgkqhkiG9w0BCQMxCwYJKoZIhvc"),
-                        label = "Test document",
-                    ),
-                ),
-            )
-
-            with(mockCredentialAuthorizedSCAL1(credential, documentDigestList)) {
-                signHash(documentDigestList, SigningAlgorithmOID.RSA).getOrThrow()
+            with(mockCredentialAuthorizedSCAL1()) {
+                signHash(mockDocumentDigestList, SigningAlgorithmOID.RSA).getOrThrow()
             }
         }
 
@@ -58,26 +94,56 @@ class SignHashTest {
         val mockedKtorHttpClientFactory = mockedKtorHttpClientFactory(
             authServerWellKnownMocker(),
             credentialsInfoPostMocker(),
-            signHashPostMocker(),
+            signHashPostMocker() { request ->
+                runBlocking {
+                    assertNotNull(
+                        request.headers["Authorization"],
+                        "Authorization header is missing in the request",
+                    )
+
+                    assertEquals(
+                        HttpMethod.Post,
+                        request.method,
+                        "Request method is not POST",
+                    )
+
+                    assertNotNull(
+                        request.body,
+                        "Request body is missing",
+                    )
+
+                    val requestBody = request.body.toByteArray().toString(Charsets.UTF_8)
+                    val signHashRequest = Json.decodeFromString<SignHashRequestTO>(requestBody)
+
+                    assertEquals(
+                        mockCredential.credentialID.value,
+                        signHashRequest.credentialID,
+                        "Credential ID is not the expected one",
+                    )
+
+                    assertEquals(
+                        mockDocumentDigestList.hashAlgorithmOID.value,
+                        signHashRequest.hashAlgorithmOID,
+                        "Hash algorithm OID not the expected one",
+                    )
+
+                    assertEquals(
+                        SigningAlgorithmOID.RSA.value,
+                        signHashRequest.signAlgorithmOID,
+                        "Signing algorithm OID not the expected one",
+                    )
+
+                    assertEquals(
+                        mockDocumentDigestList.documentDigests[0].hash.value,
+                        signHashRequest.hashes[0],
+                        "Hash value is not the expected one",
+                    )
+                }
+            },
         )
 
         val signatures = with(mockPublicClient(mockedKtorHttpClientFactory)) {
-            val credential = with(mockServiceAccessAuthorized) {
-                credentialInfo(CredentialsInfoRequest(CredentialID("83c7c559-db74-48da-aacc-d439d415cb81"))).getOrThrow()
-            }
-
-            val documentDigestList = DocumentDigestList(
-                hashAlgorithmOID = HashAlgorithmOID.SHA_256,
-                hashCalculationTime = Instant.ofEpochMilli(1731313375117),
-                documentDigests = listOf(
-                    DocumentDigest(
-                        hash = Digest("MYIBAzAYBgkqhkiG9w0BCQMxCwYJKoZIhvc"),
-                        label = "Test document",
-                    ),
-                ),
-            )
-
-            with(mockCredentialAuthorizedSCAL2(credential, documentDigestList)) {
+            with(mockCredentialAuthorizedSCAL2()) {
                 signHash(SigningAlgorithmOID.RSA).getOrThrow()
             }
         }
