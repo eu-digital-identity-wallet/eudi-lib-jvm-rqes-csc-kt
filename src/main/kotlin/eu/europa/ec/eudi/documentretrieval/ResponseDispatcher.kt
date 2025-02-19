@@ -1,0 +1,95 @@
+/*
+ * Copyright (c) 2023 European Commission
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package eu.europa.ec.eudi.documentretrieval
+
+import java.io.Serializable
+import java.net.URI
+
+/**
+ * This interface assembles an appropriate authorization response given a [request][ResolvedRequestObject]
+ * and holder's [consensus][Consensus] and then dispatches it to the verifier
+ */
+interface Dispatcher {
+
+    /**
+     * Assembles an appropriate authorization response given a [request][request]
+     * and holder's [consensus][Consensus] and then dispatches it to the verifier.
+     */
+    suspend fun dispatch(
+        request: ResolvedRequestObject,
+        consensus: Consensus,
+    ): DispatchOutcome = when (request.responseMode) {
+        is ResponseMode.DirectPost -> post(request, consensus)
+    }
+
+    /**
+     * Method forms a suitable authorization response, based on the [request] and the provided [consensus], then
+     * post it to the Verifier's end-point and returns his response.
+     */
+    suspend fun post(
+        request: ResolvedRequestObject,
+        consensus: Consensus,
+    ): DispatchOutcome.VerifierResponse
+}
+
+/**
+ * Representation of holder's consensus to
+ * a [ResolvedRequestObject]
+ */
+sealed interface Consensus : Serializable {
+
+    /**
+     * Positive consensus. Holder decided to
+     *  respond to the request
+     */
+    data class Positive(
+        val documentWithSignature: List<String>?,
+        val signatureObject: List<String>?,
+    ) : Consensus {
+        init {
+            require(documentWithSignature != null || signatureObject != null) {
+                "At least one of documentWithSignature or signatureObject must be present"
+            }
+        }
+    }
+
+    /**
+     * No consensus. Holder decided to reject
+     * the request
+     */
+    data class Negative(val error: String) : Consensus
+}
+
+/**
+ * The outcome of dispatching an [Consensus] to
+ * verifier/RP.
+ */
+sealed interface DispatchOutcome : Serializable {
+
+    sealed interface VerifierResponse : DispatchOutcome {
+        /**
+         * When verifier/RP acknowledged the direct post
+         */
+        data class Accepted(val redirectURI: URI?) : VerifierResponse
+
+        /**
+         * When verifier/RP reject the direct post
+         */
+        data object Rejected : VerifierResponse {
+            private fun readResolve(): Any = Rejected
+        }
+    }
+}
