@@ -23,11 +23,7 @@ import eu.europa.ec.eudi.rqes.internal.ensureNotNull
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.http.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import java.net.URL
 import java.text.ParseException
 
@@ -38,19 +34,15 @@ internal class RequestFetcher(
     /**
      * Fetches the authorization request, if needed
      */
-    suspend fun fetchRequest(request: UnvalidatedRequest): FetchedRequest = when (request) {
-        is UnvalidatedRequest.JwtSecured -> {
-            val (jwt, walletNonce) = when (request) {
-                is UnvalidatedRequest.JwtSecured.PassByReference -> fetchJwtAndWalletNonce(request)
-            }
-            with(documentRetrievalConfig) {
-                ensureValid(expectedClient = request.clientId, expectedWalletNonce = walletNonce, unverifiedJwt = jwt)
-            }
+    suspend fun fetchRequest(request: UnvalidatedRequest): FetchedRequest {
+        val (jwt, walletNonce) = fetchJwtAndWalletNonce(request)
+        with(documentRetrievalConfig) {
+            return ensureValid(expectedClient = request.clientId, expectedWalletNonce = walletNonce, unverifiedJwt = jwt)
         }
     }
 
     private suspend fun fetchJwtAndWalletNonce(
-        request: UnvalidatedRequest.JwtSecured.PassByReference,
+        request: UnvalidatedRequest,
     ): Pair<Jwt, Nonce?> {
         val (_, requestUri, requestUriMethod) = request
 
@@ -64,43 +56,12 @@ internal class RequestFetcher(
                 }
                 httpClient.getJAR(requestUri) to null
             }
-
-            RequestUriMethod.POST -> {
-                val postOptions =
-                    ensureNotNull(supportedMethods.isPostSupported()) {
-                        unsupportedRequestUriMethod(RequestUriMethod.POST)
-                    }
-                val walletNonce =
-                    when (val nonceOption = postOptions.useWalletNonce) {
-                        is NonceOption.Use -> Nonce(nonceOption.byteLength)
-                        NonceOption.DoNotUse -> null
-                    }
-                val walletMetaData =
-                    if (postOptions.includeWalletMetadata) {
-                        walletMetaData(documentRetrievalConfig)
-                    } else null
-                val jwt = httpClient.postForJAR(requestUri, walletNonce, walletMetaData)
-                jwt to walletNonce
-            }
         }
     }
 }
 
 private suspend fun HttpClient.getJAR(requestUri: URL): Jwt =
     get(requestUri) { addAcceptContentTypeJwt() }.body()
-
-private suspend fun HttpClient.postForJAR(
-    requestUri: URL,
-    walletNonce: Nonce?,
-    walletMetaData: JsonObject?,
-): Jwt {
-    val form =
-        parameters {
-            walletNonce?.let { append("wallet_nonce", it.toString()) }
-            walletMetaData?.let { append("wallet_metadata", Json.encodeToString(it)) }
-        }
-    return submitForm(requestUri.toString(), form) { addAcceptContentTypeJwt() }.body<Jwt>()
-}
 
 private const val APPLICATION_JWT = "application/jwt"
 private const val APPLICATION_OAUTH_AUTHZ_REQ_JWT = "application/oauth-authz-req+jwt"
@@ -114,13 +75,13 @@ private fun DocumentRetrievalConfig.ensureValid(
     expectedClient: String,
     expectedWalletNonce: Nonce?,
     unverifiedJwt: Jwt,
-): FetchedRequest.JwtSecured {
+): FetchedRequest {
     val signedJwt = ensureIsSignedJwt(unverifiedJwt).also(::ensureSupportedSigningAlgorithm)
     val clientId = ensureSameClientId(expectedClient, signedJwt)
     if (expectedWalletNonce != null) {
         ensureSameWalletNonce(expectedWalletNonce, signedJwt)
     }
-    return FetchedRequest.JwtSecured(clientId, signedJwt)
+    return FetchedRequest(clientId, signedJwt)
 }
 
 private fun ensureIsSignedJwt(unverifiedJwt: Jwt): SignedJWT =

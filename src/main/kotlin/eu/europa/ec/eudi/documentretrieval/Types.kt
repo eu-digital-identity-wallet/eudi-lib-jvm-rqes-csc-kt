@@ -34,13 +34,13 @@ data class DocumentLocation(
 
 sealed interface AccessMethod {
 
-    class Public() : AccessMethod
+    data object Public : AccessMethod
 
-    class BasicAuth() : AccessMethod
+    data object BasicAuth : AccessMethod
 
-    class DigestAuth() : AccessMethod
+    data object DigestAuth : AccessMethod
 
-    class OAuth2() : AccessMethod
+    data object OAuth2 : AccessMethod
 
     data class OTP(val oneTimePassword: String) : AccessMethod {
         init {

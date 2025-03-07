@@ -110,10 +110,10 @@ private fun requiredDocumentLocations(
             ensureNotNull(it.method) { MissingDocumentLocationMethod.asException() }
             ensureNotNull(it.method.type) { MissingDocumentLocationMethod.asException() }
             val method: AccessMethod = when (it.method.type) {
-                "public" -> AccessMethod.Public()
-                "Basic_Auth" -> AccessMethod.BasicAuth()
-                "Digest_Auth" -> AccessMethod.DigestAuth()
-                "OAuth_20" -> AccessMethod.OAuth2()
+                "public" -> AccessMethod.Public
+                "Basic_Auth" -> AccessMethod.BasicAuth
+                "Digest_Auth" -> AccessMethod.DigestAuth
+                "OAuth_20" -> AccessMethod.OAuth2
                 "OTP" -> AccessMethod.OTP(it.method.oneTimePassword ?: throw MissingDocumentLocationOTP.asException())
                 else -> throw UnsupportedDocumentLocationMethod.asException()
             }
@@ -195,10 +195,6 @@ private fun requiredResponseMode(
 
 private fun ResponseMode.uri(): URI = when (this) {
     is ResponseMode.DirectPost -> responseURI.toURI()
-}
-
-private enum class ResponseType {
-    Code,
 }
 
 private fun AuthenticatedClient.toClient(): Client =

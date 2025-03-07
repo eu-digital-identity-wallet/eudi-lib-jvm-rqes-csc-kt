@@ -31,18 +31,7 @@ interface Dispatcher {
     suspend fun dispatch(
         request: ResolvedRequestObject,
         consensus: Consensus,
-    ): DispatchOutcome = when (request.responseMode) {
-        is ResponseMode.DirectPost -> post(request, consensus)
-    }
-
-    /**
-     * Method forms a suitable authorization response, based on the [request] and the provided [consensus], then
-     * post it to the Verifier's end-point and returns his response.
-     */
-    suspend fun post(
-        request: ResolvedRequestObject,
-        consensus: Consensus,
-    ): DispatchOutcome.VerifierResponse
+    ): DispatchOutcome
 }
 
 /**
@@ -79,17 +68,15 @@ sealed interface Consensus : Serializable {
  */
 sealed interface DispatchOutcome : Serializable {
 
-    sealed interface VerifierResponse : DispatchOutcome {
-        /**
-         * When verifier/RP acknowledged the direct post
-         */
-        data class Accepted(val redirectURI: URI?) : VerifierResponse
+    /**
+     * When verifier/RP acknowledged the direct post
+     */
+    data class Accepted(val redirectURI: URI?) : DispatchOutcome
 
-        /**
-         * When verifier/RP reject the direct post
-         */
-        data object Rejected : VerifierResponse {
-            private fun readResolve(): Any = Rejected
-        }
+    /**
+     * When verifier/RP reject the direct post
+     */
+    data object Rejected : DispatchOutcome {
+        private fun readResolve(): Any = Rejected
     }
 }

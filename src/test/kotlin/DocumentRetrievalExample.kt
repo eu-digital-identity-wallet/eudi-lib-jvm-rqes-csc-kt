@@ -15,80 +15,77 @@
  */
 import com.nimbusds.jose.JWSAlgorithm
 import eu.europa.ec.eudi.documentretrieval.*
+import eu.europa.ec.eudi.rqes.DefaultHttpClientFactory
 import eu.europa.ec.eudi.rqes.Signature
 import eu.europa.ec.eudi.rqes.SignaturesList
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
 import java.io.ByteArrayInputStream
+import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
+import java.util.*
 
 fun main() {
     runBlocking {
         val config = DocumentRetrievalConfig(
             jarConfiguration = JarConfiguration(
                 supportedRequestUriMethods = SupportedRequestUriMethods.Default,
-                supportedAlgorithms = listOf(JWSAlgorithm.HS256),
+                supportedAlgorithms = listOf(JWSAlgorithm.HS256, JWSAlgorithm.ES256),
             ),
             clock = Clock.systemDefaultZone(),
             jarClockSkew = Duration.ofSeconds(15L),
             supportedClientIdSchemes = listOf(
                 SupportedClientIdScheme.X509SanUri.NoValidation,
                 SupportedClientIdScheme.X509SanDns.NoValidation,
-                SupportedClientIdScheme.Preregistered(
-                    clients = mapOf<String, PreregisteredClient>(
-                        "16b45b1e-3253-436d-a5ef-c235c3f61075" to PreregisteredClient(
-                            clientId = "16b45b1e-3253-436d-a5ef-c235c3f61075",
-                            legalName = "walletcentric.signer.eudiw.dev",
-                            jarConfig = JWSAlgorithm.HS256 to JwkSetSource.ByValue(
-                                jwks = Json.parseToJsonElement(
-                                    """
-                                   {
-                                       "keys": [
-                                           {
-                                               "kty": "oct",
-                                               "use": "sig",
-                                               "alg": "HS256",
-                                               "k": "U0mY7v8Q1w2Z4v6y9B+D-KaPdSgVkXpA"
-                                           }
-                                       ]
-                                   }
-                                    """.trimIndent(),
-                                ).jsonObject,
-                            ),
-                        ),
-                    ),
-                ),
             ),
         )
 
         val client = DocumentRetrieval(config)
 
         with(client) {
-            var resolution =
+            val resolution =
                 resolveRequestUri(
                     """
-                    mdoc-openid4vp://walletcentric.signer.eudiw.dev?
-                    request_uri=https://walletcentric.signer.eudiw.dev/rp/wallet/sd/16b45b1e-3253-436d-a5ef-c235c3f61075
-                    &client_id=16b45b1e-3253-436d-a5ef-c235c3f61075")
-                    """.trimIndent(),
+                    mdoc-openid4vp://https//walletcentric.signer.eudiw.dev/rp?request_uri=
+                    https://walletcentric.signer.eudiw.dev/rp/wallet/sd/LAIfYMo0H4O3L8Ua9AQutH7IWPQxrXpaTb3IfoQNze0
+                    &client_id=walletcentric.signer.eudiw.dev
+                    """.trimIndent().replace("\n", ""),
                 )
 
             if (resolution is Resolution.Success) {
+                val documentsToSign = resolution.requestObject.documentLocations
+                    .zip(resolution.requestObject.documentDigests) {
+                            location, digest ->
+                        DefaultHttpClientFactory().get(location.uri).let {
+                            // read the response as a file to a byte array
+                            val documentContent = it.readRawBytes()
+
+                            // calculate the document digest using the hash algorithm OID from the request object
+                            val messageDigest = MessageDigest.getInstance(resolution.requestObject.hashAlgorithmOID.value)
+
+                            val computedDigest = messageDigest.digest(documentContent)
+                            val base64Digest = String(Base64.getEncoder().encode(computedDigest))
+
+                            // compare the calculated digest with the provided one
+                            val validDigest = base64Digest == digest.hash
+
+                            documentContent
+                        }
+                    }.map { it }
+
                 // document signing flow starts here, as shown in the Example.kt file
 
                 // the output of the  signing flow is a list of signed documents and a list of signatures
 
                 val signedDocuments =
                     listOf(
-                        ByteArrayInputStream("document1".toByteArray()),
-                        ByteArrayInputStream("document2".toByteArray()),
+                        ByteArrayInputStream("signed document".toByteArray()),
                     )
                 val signatureList = SignaturesList(
                     listOf(
-                        Signature("signature1"),
-                        Signature("signature2"),
+                        Signature("signature"),
                     ),
                 )
 

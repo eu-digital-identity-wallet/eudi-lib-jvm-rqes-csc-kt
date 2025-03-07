@@ -17,13 +17,7 @@ package eu.europa.ec.eudi.documentretrieval.internal.request
 
 import com.eygraber.uri.Uri
 import com.nimbusds.jwt.SignedJWT
-import eu.europa.ec.eudi.documentretrieval.AuthorizationRequestException
-import eu.europa.ec.eudi.documentretrieval.AuthorizationRequestResolver
-import eu.europa.ec.eudi.documentretrieval.DocumentRetrievalConfig
-import eu.europa.ec.eudi.documentretrieval.HttpError
-import eu.europa.ec.eudi.documentretrieval.RequestValidationError
-import eu.europa.ec.eudi.documentretrieval.Resolution
-import eu.europa.ec.eudi.documentretrieval.asException
+import eu.europa.ec.eudi.documentretrieval.*
 import eu.europa.ec.eudi.rqes.KtorHttpClientFactory
 import io.ktor.client.*
 import io.ktor.client.plugins.*
@@ -57,22 +51,11 @@ internal data class UnvalidatedRequestObject(
  *
  * This is merely a data carrier structure that doesn't enforce any rules.
  */
-internal sealed interface UnvalidatedRequest {
-
-    /**
-     * JWT Secured authorization request (JAR)
-     */
-    sealed interface JwtSecured : UnvalidatedRequest {
-
-        /**
-         * A JAR passed by reference
-         */
-        data class PassByReference(
-            val clientId: String,
-            val jwtURI: URL,
-            val requestURIMethod: RequestUriMethod?,
-        ) : JwtSecured
-    }
+data class UnvalidatedRequest(
+    val clientId: String,
+    val jwtURI: URL,
+    val requestURIMethod: RequestUriMethod?,
+) {
 
     companion object {
         /**
@@ -87,18 +70,16 @@ internal sealed interface UnvalidatedRequest {
                 ?: throw RequestValidationError.MissingRequestUri.asException()
 
             val requestUri = requestUriValue.asURL().getOrThrow()
-            JwtSecured.PassByReference(clientId(), requestUri, RequestUriMethod.GET)
+            UnvalidatedRequest(clientId(), requestUri, RequestUriMethod.GET)
         }
     }
 }
 
 enum class RequestUriMethod {
-    GET, POST
+    GET,
 }
 
-internal sealed interface FetchedRequest {
-    data class JwtSecured(val clientId: String, val jwt: SignedJWT) : FetchedRequest
-}
+data class FetchedRequest(val clientId: String, val jwt: SignedJWT)
 
 internal class DefaultAuthorizationRequestResolver(
     private val documentRetrievalConfig: DocumentRetrievalConfig,

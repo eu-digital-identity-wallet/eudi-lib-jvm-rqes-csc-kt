@@ -30,7 +30,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.test.runTest
-import java.net.URL
+import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -62,8 +62,8 @@ class AuthorizationResponseDispatcherTest {
                     ),
                     documentLocations = listOf(
                         DocumentLocation(
-                            uri = URL("https://walletcentric.signer.eudiw.dev/rp/tester/document/sample.pdf"),
-                            method = AccessMethod.Public(),
+                            uri = URI("https://walletcentric.signer.eudiw.dev/rp/tester/document/sample.pdf").toURL(),
+                            method = AccessMethod.Public,
                         ),
                     ),
                     hashAlgorithmOID = HashAlgorithmOID("2.16.840.1.101.3.4.2.1"),
@@ -116,7 +116,7 @@ class AuthorizationResponseDispatcherTest {
                     consensus,
                 )
 
-                assertIs<DispatchOutcome.VerifierResponse>(outcome)
+                assertIs<DispatchOutcome>(outcome)
             }
         }
 

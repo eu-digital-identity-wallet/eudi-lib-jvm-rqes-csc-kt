@@ -41,10 +41,10 @@ internal class DefaultDispatcher(
     private val httpClientFactory: KtorHttpClientFactory,
 ) : Dispatcher {
 
-    override suspend fun post(
+    override suspend fun dispatch(
         request: ResolvedRequestObject,
         consensus: Consensus,
-    ): DispatchOutcome.VerifierResponse {
+    ): DispatchOutcome {
         val (responseUri, parameters) = formParameters(request, consensus)
         return httpClientFactory().use { httpClient ->
             submitForm(httpClient, responseUri, parameters)
@@ -70,7 +70,7 @@ internal class DefaultDispatcher(
         httpClient: HttpClient,
         url: URL,
         parameters: Parameters,
-    ): DispatchOutcome.VerifierResponse {
+    ): DispatchOutcome {
         val response = httpClient.post(url.toExternalForm()) {
             body = FormData(parameters)
         }
@@ -87,10 +87,10 @@ internal class DefaultDispatcher(
                     } catch (_: NoTransformationFoundException) {
                         null
                     }
-                DispatchOutcome.VerifierResponse.Accepted(redirectUri)
+                DispatchOutcome.Accepted(redirectUri)
             }
 
-            else -> DispatchOutcome.VerifierResponse.Rejected
+            else -> DispatchOutcome.Rejected
         }
     }
 }
@@ -161,7 +161,7 @@ internal fun List<String>.asParam() =
  * [OutgoingContent] for `application/x-www-form-urlencoded` formatted requests that use US-ASCII encoding.
  */
 internal class FormData(
-    val formData: Parameters,
+    formData: Parameters,
 ) : OutgoingContent.ByteArrayContent() {
     private val content = formData.formUrlEncode().toByteArray(Charsets.US_ASCII)
 

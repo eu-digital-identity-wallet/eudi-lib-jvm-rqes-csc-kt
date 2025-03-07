@@ -65,20 +65,14 @@ internal class RequestAuthenticator(documentRetrievalConfig: DocumentRetrievalCo
 
     suspend fun authenticate(request: FetchedRequest): AuthenticatedRequest = coroutineScope {
         val client = clientAuthenticator.authenticateClient(request)
-        when (request) {
-            is FetchedRequest.JwtSecured -> {
-                with(signatureVerifier) { verifySignature(client, request.jwt) }
-                AuthenticatedRequest(client, request.jwt.requestObject())
-            }
-        }
+        with(signatureVerifier) { verifySignature(client, request.jwt) }
+        AuthenticatedRequest(client, request.jwt.requestObject())
     }
 }
 
 internal class ClientAuthenticator(private val documentRetrievalConfig: DocumentRetrievalConfig) {
     fun authenticateClient(request: FetchedRequest): AuthenticatedClient {
-        val requestObject = when (request) {
-            is FetchedRequest.JwtSecured -> request.jwt.requestObject()
-        }
+        val requestObject = request.jwt.requestObject()
 
         val (clientId, clientIdScheme) = clientIdAndScheme(requestObject)
         return when (clientIdScheme) {
@@ -93,9 +87,6 @@ internal class ClientAuthenticator(private val documentRetrievalConfig: Document
             }
 
             is SupportedClientIdScheme.X509SanDns -> {
-                ensure(request is FetchedRequest.JwtSecured) {
-                    invalidScheme("${clientIdScheme.scheme()} cannot be used in unsigned request")
-                }
                 val chain = x5c(request, clientIdScheme.trust) {
                     val dnsNames = sanOfDNSName().getOrNull()
                     ensureNotNull(dnsNames) { invalidJarJwt("Certificates misses DNS names") }
@@ -104,9 +95,6 @@ internal class ClientAuthenticator(private val documentRetrievalConfig: Document
             }
 
             is SupportedClientIdScheme.X509SanUri -> {
-                ensure(request is FetchedRequest.JwtSecured) {
-                    invalidScheme("${clientIdScheme.scheme()} cannot be used in unsigned request")
-                }
                 val chain = x5c(request, clientIdScheme.trust) {
                     val dnsNames = sanOfUniformResourceIdentifier().getOrNull()
                     ensureNotNull(dnsNames) { invalidJarJwt("Certificates misses URI names") }
@@ -127,7 +115,7 @@ internal class ClientAuthenticator(private val documentRetrievalConfig: Document
     }
 
     private fun x5c(
-        request: FetchedRequest.JwtSecured,
+        request: FetchedRequest,
         trust: X509CertificateTrust,
         subjectAlternativeNames: X509Certificate.() -> List<String>,
     ): List<X509Certificate> {
