@@ -44,19 +44,8 @@ internal class RequestFetcher(
     private suspend fun fetchJwtAndWalletNonce(
         request: UnvalidatedRequest,
     ): Pair<Jwt, Nonce?> {
-        val (_, requestUri, requestUriMethod) = request
-
-        val supportedMethods =
-            documentRetrievalConfig.jarConfiguration.supportedRequestUriMethods
-
-        return when (requestUriMethod) {
-            null, RequestUriMethod.GET -> {
-                ensure(supportedMethods.isGetSupported()) {
-                    unsupportedRequestUriMethod(RequestUriMethod.GET)
-                }
-                httpClient.getJAR(requestUri) to null
-            }
-        }
+        val (_, requestUri) = request
+        return httpClient.getJAR(requestUri) to null
     }
 }
 
@@ -120,6 +109,3 @@ private fun ensureSameClientId(
 
 private fun invalidJwt(cause: String): AuthorizationRequestException =
     RequestValidationError.InvalidJarJwt(cause).asException()
-
-private fun unsupportedRequestUriMethod(m: RequestUriMethod): AuthorizationRequestException =
-    RequestValidationError.UnsupportedRequestUriMethod(m).asException()

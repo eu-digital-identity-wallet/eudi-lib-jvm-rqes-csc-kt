@@ -15,7 +15,6 @@
  */
 package eu.europa.ec.eudi.documentretrieval
 
-import eu.europa.ec.eudi.documentretrieval.internal.request.RequestUriMethod
 import eu.europa.ec.eudi.rqes.HashAlgorithmOID
 import eu.europa.ec.eudi.rqes.SignatureQualifier
 import java.io.Serializable
@@ -115,7 +114,6 @@ fun AuthorizationRequestError.asException(): AuthorizationRequestException =
  * Validation errors that can occur while validating an authorization request
  */
 sealed interface RequestValidationError : AuthorizationRequestError {
-    data class UnsupportedRequestUriMethod(val method: RequestUriMethod) : RequestValidationError
 
     data class InvalidJarJwt(val cause: String) : AuthorizationRequestError
 

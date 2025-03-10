@@ -53,7 +53,6 @@ internal enum class AuthorizationRequestErrorCode(val code: String) {
                 is UnsupportedResponseType,
                 is HttpError,
                 InvalidRequestUriMethod,
-                is UnsupportedRequestUriMethod,
                 InvalidDocumentDigests,
                 InvalidDocumentLocations,
                 MissingDocumentDigests,

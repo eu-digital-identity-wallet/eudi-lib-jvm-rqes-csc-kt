@@ -252,15 +252,12 @@ public final class eu/europa/ec/eudi/documentretrieval/HttpError : eu/europa/ec/
 
 public final class eu/europa/ec/eudi/documentretrieval/JarConfiguration {
 	public static final field Companion Leu/europa/ec/eudi/documentretrieval/JarConfiguration$Companion;
-	public fun <init> (Ljava/util/List;Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;)V
-	public synthetic fun <init> (Ljava/util/List;Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;)V
 	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;
-	public final fun copy (Ljava/util/List;Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;)Leu/europa/ec/eudi/documentretrieval/JarConfiguration;
-	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/JarConfiguration;Ljava/util/List;Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/JarConfiguration;
+	public final fun copy (Ljava/util/List;)Leu/europa/ec/eudi/documentretrieval/JarConfiguration;
+	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/JarConfiguration;Ljava/util/List;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/JarConfiguration;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getSupportedAlgorithms ()Ljava/util/List;
-	public final fun getSupportedRequestUriMethods ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -292,31 +289,6 @@ public final class eu/europa/ec/eudi/documentretrieval/JwkSetSource$ByValue : eu
 	public final fun getJwks ()Lkotlinx/serialization/json/JsonObject;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class eu/europa/ec/eudi/documentretrieval/NonceOption {
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/NonceOption$DoNotUse : eu/europa/ec/eudi/documentretrieval/NonceOption {
-	public static final field INSTANCE Leu/europa/ec/eudi/documentretrieval/NonceOption$DoNotUse;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/NonceOption$Use : eu/europa/ec/eudi/documentretrieval/NonceOption {
-	public static final synthetic fun box-impl (I)Leu/europa/ec/eudi/documentretrieval/NonceOption$Use;
-	public static fun constructor-impl (I)I
-	public static synthetic fun constructor-impl$default (IILkotlin/jvm/internal/DefaultConstructorMarker;)I
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (ILjava/lang/Object;)Z
-	public static final fun equals-impl0 (II)Z
-	public final fun getByteLength ()I
-	public fun hashCode ()I
-	public static fun hashCode-impl (I)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (I)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()I
 }
 
 public final class eu/europa/ec/eudi/documentretrieval/OpenId4VPSpec {
@@ -514,17 +486,6 @@ public final class eu/europa/ec/eudi/documentretrieval/RequestValidationError$Un
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class eu/europa/ec/eudi/documentretrieval/RequestValidationError$UnsupportedRequestUriMethod : eu/europa/ec/eudi/documentretrieval/RequestValidationError {
-	public fun <init> (Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;)V
-	public final fun component1 ()Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
-	public final fun copy (Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;)Leu/europa/ec/eudi/documentretrieval/RequestValidationError$UnsupportedRequestUriMethod;
-	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/RequestValidationError$UnsupportedRequestUriMethod;Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/RequestValidationError$UnsupportedRequestUriMethod;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getMethod ()Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class eu/europa/ec/eudi/documentretrieval/RequestValidationError$UnsupportedResponseMode : eu/europa/ec/eudi/documentretrieval/RequestValidationError {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
@@ -677,60 +638,6 @@ public final class eu/europa/ec/eudi/documentretrieval/SupportedClientIdScheme$X
 public final class eu/europa/ec/eudi/documentretrieval/SupportedClientIdScheme$X509SanUri$Companion {
 }
 
-public abstract interface class eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods {
-	public static final field Companion Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Companion;
-	public abstract fun isGetSupported ()Z
-	public abstract fun isPostSupported ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Both : eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods {
-	public fun <init> (Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;)V
-	public final fun component1 ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public final fun copy (Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;)Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Both;
-	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Both;Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Both;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getPost ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public fun hashCode ()I
-	public fun isGetSupported ()Z
-	public fun isPostSupported ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Companion {
-	public final fun getDefault ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$DefaultImpls {
-	public static fun isGetSupported (Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;)Z
-	public static fun isPostSupported (Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods;)Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Get : eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods {
-	public static final field INSTANCE Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Get;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun isGetSupported ()Z
-	public fun isPostSupported ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post : eu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods {
-	public fun <init> ()V
-	public fun <init> (ZLeu/europa/ec/eudi/documentretrieval/NonceOption;)V
-	public synthetic fun <init> (ZLeu/europa/ec/eudi/documentretrieval/NonceOption;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Z
-	public final fun component2 ()Leu/europa/ec/eudi/documentretrieval/NonceOption;
-	public final fun copy (ZLeu/europa/ec/eudi/documentretrieval/NonceOption;)Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;ZLeu/europa/ec/eudi/documentretrieval/NonceOption;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getIncludeWalletMetadata ()Z
-	public final fun getUseWalletNonce ()Leu/europa/ec/eudi/documentretrieval/NonceOption;
-	public fun hashCode ()I
-	public fun isGetSupported ()Z
-	public fun isPostSupported ()Leu/europa/ec/eudi/documentretrieval/SupportedRequestUriMethods$Post;
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class eu/europa/ec/eudi/documentretrieval/X509CertificateTrust {
 	public abstract fun isTrusted (Ljava/util/List;)Z
 }
@@ -782,25 +689,16 @@ public final class eu/europa/ec/eudi/documentretrieval/internal/request/FetchedR
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class eu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod : java/lang/Enum {
-	public static final field GET Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
-	public static fun values ()[Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
-}
-
 public final class eu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest {
 	public static final field Companion Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/net/URL;Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;)V
+	public fun <init> (Ljava/lang/String;Ljava/net/URL;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/net/URL;
-	public final fun component3 ()Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
-	public final fun copy (Ljava/lang/String;Ljava/net/URL;Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;)Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest;
-	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest;Ljava/lang/String;Ljava/net/URL;Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest;
+	public final fun copy (Ljava/lang/String;Ljava/net/URL;)Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest;
+	public static synthetic fun copy$default (Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest;Ljava/lang/String;Ljava/net/URL;ILjava/lang/Object;)Leu/europa/ec/eudi/documentretrieval/internal/request/UnvalidatedRequest;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getClientId ()Ljava/lang/String;
 	public final fun getJwtURI ()Ljava/net/URL;
-	public final fun getRequestURIMethod ()Leu/europa/ec/eudi/documentretrieval/internal/request/RequestUriMethod;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

@@ -54,7 +54,6 @@ internal data class UnvalidatedRequestObject(
 data class UnvalidatedRequest(
     val clientId: String,
     val jwtURI: URL,
-    val requestURIMethod: RequestUriMethod?,
 ) {
 
     companion object {
@@ -70,13 +69,9 @@ data class UnvalidatedRequest(
                 ?: throw RequestValidationError.MissingRequestUri.asException()
 
             val requestUri = requestUriValue.asURL().getOrThrow()
-            UnvalidatedRequest(clientId(), requestUri, RequestUriMethod.GET)
+            UnvalidatedRequest(clientId(), requestUri)
         }
     }
-}
-
-enum class RequestUriMethod {
-    GET,
 }
 
 data class FetchedRequest(val clientId: String, val jwt: SignedJWT)

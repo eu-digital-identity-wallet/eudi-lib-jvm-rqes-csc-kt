@@ -121,7 +121,6 @@ class AuthorizationRequestResolverTest {
 
                 val config = DocumentRetrievalConfig(
                     jarConfiguration = JarConfiguration(
-                        supportedRequestUriMethods = SupportedRequestUriMethods.Default,
                         supportedAlgorithms = listOf(JWSAlgorithm.ES256),
                     ),
                     clock = Clock.systemDefaultZone(),
