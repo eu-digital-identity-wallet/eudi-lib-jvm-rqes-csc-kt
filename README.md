@@ -235,9 +235,31 @@ sequenceDiagram
 > [!WARNING]
 > This flow is not part of the CSC API specification and may be removed in future versions of the library.
 
-This library is also implementing a flow call Document Retrieval, that allows a Relying Party (RP) to communication to the Caller the location of the documents to be signed.
+This library is also implementing a flow call Document Retrieval, that allows a Relying Party (RP) to communicate to the Caller the locations of documents to be signed.
 It also provides a way for the Caller to provide the signed documents or signatures back to the RP.
 This flow resembles a Verifiable Presentation flow.
+
+The interactions with the RP happen via the DocumentRetrieval client, which is a separate client from the main client that interacts with the RSSP.
+
+### How to initiate the document retrieval client
+
+```kotlin
+val config = DocumentRetrievalConfig(
+    jarConfiguration = JarConfiguration(
+        supportedAlgorithms = listOf(JWSAlgorithm.HS256, JWSAlgorithm.ES256),
+    ),
+    clock = Clock.systemDefaultZone(),
+    jarClockSkew = Duration.ofSeconds(15L),
+    supportedClientIdSchemes = listOf(
+        SupportedClientIdScheme.X509SanUri.NoValidation,
+        SupportedClientIdScheme.X509SanDns.NoValidation,
+    ),
+)
+
+val client = DocumentRetrieval(config)
+```
+
+### Document Retrieval
 
 The Caller must first acquire a request URI from the RP, usually by scanning a QR code. The request URI is then provided to the Library, which will retrieve the request object from the RP:
 
@@ -260,7 +282,16 @@ sequenceDiagram
     deactivate Library
 ```
 
-At this point the Caller has a request object that contains information about the documents location, their hashes as well as the access method for the retrieval of the documents.
+Given that the Caller has obtained a request URI from the RP, the Document Retrieval flow can be initiated as follows:
+
+```kotlin
+with(client) {
+    val resolution = resolveRequestUri(requestUri)
+}
+```
+
+The `resolution` object contains a validated request object. It contains information about the documents locations, the document hashes as well as the access method for the retrieval of the documents.
+
 The Caller can now download the documents, compute theis hashes, and compare them with the hashes in the request object in order to ensure the integrity of the documents:
 
 ```mermaid
@@ -274,6 +305,9 @@ sequenceDiagram
     Caller ->> Caller: Calculate document hashes and compare<br/>with the hashes in the request object
     deactivate Caller
 ```
+
+### Dispatch signed documents
+
 The Caller can now start the signing flow as described in the previous section. After completion, the Caller can now communicate the signed documents or signatures back to the RP:
 
 ```mermaid
@@ -290,8 +324,23 @@ sequenceDiagram
     deactivate Library
 ```
 
+
+To send the signed documents back to the RP, the Caller can use the `dispatch` method, as follows:
+
+```kotlin
+with(client) {
+    dispatch(
+        resolution.requestObject,
+        Consensus.Positive(
+            documentWithSignature = signedDocuments.map { it.readAllBytes().decodeToString() },
+            signatureObject = signatureList.signatures.map { it.value },
+        ),
+    )
+}
+```
+
 > [!TIP]
-> A code example of how to use the Document Retrieval flow can be found in the [DocumentRetrievalFlowTest](src/test/kotlin/eu/europa/ec/eudi/DocumentRetrievalExample.kt) file.
+> A code example of how to use the Document Retrieval flow can be found in the [DocumentRetrievalFlowTest](src/test/kotlin/DocumentRetrievalExample.kt) file.
 
 ## Disclaimer
 
