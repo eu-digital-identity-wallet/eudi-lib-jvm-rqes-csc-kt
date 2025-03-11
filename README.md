@@ -10,6 +10,7 @@ the [EUDI Wallet Reference Implementation project description](https://github.co
 * [Overview](#overview)
 * [Implemented features](#implemented-features)
 * [Interactions between the library, the caller and the RSSP](#interactions-between-the-library-the-caller-and-the-rssp)
+* [Document Retrieval flow](#document-retrieval-flow)
 * [Disclaimer](#disclaimer)
 * [How to contribute](#how-to-contribute)
 * [License](#license)
@@ -228,6 +229,69 @@ sequenceDiagram
     Library ->> Caller: return digital signature
     deactivate Library
 ```
+
+## Document Retrieval flow
+
+> [!WARNING]
+> This flow is not part of the CSC API specification and may be removed in future versions of the library.
+
+This library is also implementing a flow call Document Retrieval, that allows a Relying Party (RP) to communication to the Caller the location of the documents to be signed.
+It also provides a way for the Caller to provide the signed documents or signatures back to the RP.
+This flow resembles a Verifiable Presentation flow.
+
+The Caller must first acquire a request URI from the RP, usually by scanning a QR code. The request URI is then provided to the Library, which will retrieve the request object from the RP:
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant Library
+    participant RP
+    autonumber
+    Caller ->> RP: Scan QR code to retrieve request URI
+    activate RP
+    RP ->> Caller: Return request URI
+    deactivate RP
+    Caller ->> Library: Initiate document retrieval,<br/>providing the request URI
+    activate Library
+    Library ->> RP: GET request object
+    RP ->> Library: Return request object
+    Library ->> Library: Parse and validate request object
+    Library ->> Caller: Return validated request object
+    deactivate Library
+```
+
+At this point the Caller has a request object that contains information about the documents location, their hashes as well as the access method for the retrieval of the documents.
+The Caller can now download the documents, compute theis hashes, and compare them with the hashes in the request object in order to ensure the integrity of the documents:
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant RP
+    autonumber
+    activate Caller
+    Caller ->> RP: Download documents
+    RP ->> Caller: Return documents
+    Caller ->> Caller: Calculate document hashes and compare<br/>with the hashes in the request object
+    deactivate Caller
+```
+The Caller can now start the signing flow as described in the previous section. After completion, the Caller can now communicate the signed documents or signatures back to the RP:
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant Library
+    participant RP
+    autonumber
+    Caller ->> Library: Signed documents or signatures
+    activate Library
+    Library ->> RP: Send signed documents or signatures
+    RP ->> Library: Return response
+    Library ->> Caller: Return response
+    deactivate Library
+```
+
+> [!TIP]
+> A code example of how to use the Document Retrieval flow can be found in the [DocumentRetrievalFlowTest](src/test/kotlin/eu/europa/ec/eudi/DocumentRetrievalExample.kt) file.
 
 ## Disclaimer
 
