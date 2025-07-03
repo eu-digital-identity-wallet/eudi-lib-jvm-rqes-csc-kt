@@ -75,7 +75,6 @@ private val unsafeHttpClientFactory: KtorHttpClientFactory = {
 private var cscClientConfig = CSCClientConfig(
     OAuth2Client.Confidential.ClientSecretBasic(client_id, client_secret),
     URI("https://oauthdebugger.com/debug"),
-    URI("https://walletcentric.signer.eudiw.dev").toURL(),
     ParUsage.IfSupported,
     RarUsage.IfSupported,
 )
