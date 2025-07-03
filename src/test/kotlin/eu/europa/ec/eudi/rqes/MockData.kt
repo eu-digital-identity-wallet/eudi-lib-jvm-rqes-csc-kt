@@ -68,7 +68,6 @@ private fun mockClient(
     cscClientConfig = CSCClientConfig(
         oauth2Client,
         URI("https://example.com/redirect"),
-        URI("https://walletcentric.signer.eudiw.dev").toURL(),
         parUsage,
         rarUsage,
         tsaurl = tsaurl,
