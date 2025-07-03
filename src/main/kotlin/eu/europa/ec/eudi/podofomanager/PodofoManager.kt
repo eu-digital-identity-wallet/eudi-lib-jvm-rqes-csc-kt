@@ -108,14 +108,18 @@ class PodofoManager {
                 val signedHash = signatures[index]
                 sessionWrapper.session.printState()
 
-                val tsRequest = TimestampRequestTO(
-                    signedHash = signedHash,
-                    tsaUrl = tsaUrl ?: ""
-                )
-                val service = TimestampServiceImpl()
-                val response = service.requestTimestamp(tsRequest)
+                if (tsaUrl.isNullOrEmpty()) {
+                    sessionWrapper.session.finalizeSigningWithSignedHash(signedHash, "")
+                } else {
+                    val tsRequest = TimestampRequestTO(
+                        signedHash = signedHash,
+                        tsaUrl = tsaUrl
+                    )
+                    val service = TimestampServiceImpl()
+                    val response = service.requestTimestamp(tsRequest)
 
-                sessionWrapper.session.finalizeSigningWithSignedHash(signedHash, response.base64Tsr)
+                    sessionWrapper.session.finalizeSigningWithSignedHash(signedHash, response.base64Tsr)
+                }
             }
 
         }
