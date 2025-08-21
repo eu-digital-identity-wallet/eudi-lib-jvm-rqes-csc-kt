@@ -24,33 +24,26 @@ import java.net.HttpURLConnection
 class TimestampServiceImpl {
 
     suspend fun requestTimestamp(request: TimestampRequestTO): TimestampResponseTO {
-        println("Requesting timestamp for signed hash: ${request.signedHash}")
         val tsq = buildTSQ(request.signedHash)
         return getTimestampResponse(tsq, request.tsaUrl)
     }
 
     suspend fun requestDocTimestamp(request: TimestampRequestTO): TimestampResponseTO {
-        println("Requesting document timestamp for raw hash: ${request.signedHash}")
         val tsq = buildTSQForDocTimestamp(request.signedHash)
         return getTimestampResponse(tsq, request.tsaUrl)
     }
 
     private suspend fun getTimestampResponse(tsq: ByteArray, tsaUrl: String): TimestampResponseTO {
-        println("Getting timestamp response from TSA: $tsaUrl")
         return try {
             val tsrData = makeRequest(tsq, tsaUrl)
-            println("TSR data received, size: ${tsrData.size}")
             val base64Tsr = encodeTSRToBase64(tsrData)
-            println("Encoded TSR to Base64: $base64Tsr")
             TimestampResponseTO(base64Tsr = base64Tsr)
         } catch (e: Exception) {
-            println("Failed to generate timestamp: ${e.message}")
             throw RuntimeException("Failed to generate timestamp", e)
         }
     }
 
     private fun buildTSQ(signedHashBase64: String): ByteArray {
-        println("Building TSQ from signed hash...")
         if (signedHashBase64.isBlank()) {
             throw IllegalArgumentException("Empty signed hash")
         }
@@ -60,16 +53,13 @@ class TimestampServiceImpl {
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("Invalid Base64", e)
         }
-        println("Decoded signed hash, size: ${rawHash.size}")
 
         val digest = MessageDigest.getInstance("SHA-256").digest(rawHash)
-        println("Calculated SHA-256 digest, size: ${digest.size}")
 
         return createTSQ(digest)
     }
 
     private fun buildTSQForDocTimestamp(rawHashBase64: String): ByteArray {
-        println("Building TSQ for document timestamp from raw hash...")
         if (rawHashBase64.isBlank()) {
             throw IllegalArgumentException("Empty hash")
         }
@@ -79,13 +69,11 @@ class TimestampServiceImpl {
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("Invalid Base64", e)
         }
-        println("Decoded raw hash, size: ${digestData.size}")
 
         return createTSQ(digestData)
     }
 
     private fun createTSQ(digestData: ByteArray): ByteArray {
-        println("Creating TSQ core structure with digest size: ${digestData.size}")
         val oidSHA256 = byteArrayOf(
             0x06, 0x09, 0x60.toByte(), 0x86.toByte(), 0x48, 0x01, 0x65,
             0x03, 0x04, 0x02, 0x01
@@ -101,7 +89,6 @@ class TimestampServiceImpl {
 
         val tsReqBody = versionBytes + msgImprintSeq + certReqBytes
         val tsq = tlv(0x30, tsReqBody)
-        println("TSQ created, size: ${tsq.size}")
         return tsq
     }
 
@@ -125,7 +112,6 @@ class TimestampServiceImpl {
     }
 
     private fun makeRequest(tsqData: ByteArray, tsaUrl: String): ByteArray {
-        println("Making timestamp request to TSA: $tsaUrl")
         val url = try {
             URL(tsaUrl)
         } catch (e: Exception) {
@@ -142,17 +128,14 @@ class TimestampServiceImpl {
             setRequestProperty("Accept", "application/timestamp-reply")
         }
 
-        println("Sending TSQ data, size: ${tsqData.size}")
         connection.outputStream.use { it.write(tsqData) }
 
         val responseCode = connection.responseCode
-        println("TSA server responded with HTTP code: $responseCode")
         if (responseCode != 200) {
             throw IOException("TSA server responded with HTTP $responseCode")
         }
 
         val responseData = connection.inputStream.use { it.readBytes() }
-        println("Received TSR data from TSA, size: ${responseData.size}")
         return responseData
     }
 
