@@ -36,11 +36,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
-
 class PodofoManager {
     private var podofoSessions by mutableStateOf<List<PodofoSession>>(emptyList())
 
-    public suspend fun calculateDocumentHashes(
+    suspend fun calculateDocumentHashes(
         documents: List<DocumentToSign>,
         credentialCertificate: CredentialCertificate,
         hashAlgorithmOID : HashAlgorithmOID,
@@ -81,7 +80,7 @@ class PodofoManager {
                         podofoSessions = podofoSessions + session
                     } ?: throw IllegalStateException("Failed to calculate hash for document: ${doc.documentInputPath}")
 
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     error("Failed to calculate hash for ${doc.documentOutputPath}")
                 }
             }
@@ -107,7 +106,7 @@ class PodofoManager {
         }
     }
 
-    public suspend fun createSignedDocuments(signatures: List<String>, tsaUrl: String?, includeRevocationInfo: Boolean) = withContext(Dispatchers.IO) {
+    suspend fun createSignedDocuments(signatures: List<String>, tsaUrl: String?, includeRevocationInfo: Boolean) = withContext(Dispatchers.IO) {
         try {
             check (signatures.size == podofoSessions.size) {
                "Signatures count (${signatures.size}) does not match session count (${podofoSessions.size})"
@@ -231,7 +230,7 @@ class PodofoManager {
                     val crls = fetchCrlDataFromUrls(crlLTAUrls.toList())
                     validationLTACrls.addAll(crls)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Graceful fallback: continue with TSR only (OCSP/CRL/cert enrichment may be incomplete)
             }
             sessionWrapper.session.finishSigningLTA(
@@ -284,7 +283,7 @@ class PodofoManager {
                     tsResponse.base64Tsr
                 )
                 validationOCSPs.add(ocspResponse)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Graceful fallback: continue without OCSP evidence
             }
         }
