@@ -16,9 +16,6 @@
 package eu.europa.ec.eudi.documentretrieval.internal
 
 import java.security.cert.X509Certificate
-import kotlin.collections.filter
-import kotlin.collections.forEach
-import kotlin.collections.isNullOrEmpty
 
 fun X509Certificate.sanOfUniformResourceIdentifier(): Result<List<String>> =
     san(X509SubjectAlternativeNameType.UniformResourceIdentifier)

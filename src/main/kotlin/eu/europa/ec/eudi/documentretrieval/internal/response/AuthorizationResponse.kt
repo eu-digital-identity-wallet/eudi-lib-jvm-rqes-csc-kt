@@ -17,6 +17,7 @@ package eu.europa.ec.eudi.documentretrieval.internal.response
 
 import eu.europa.ec.eudi.documentretrieval.AuthorizationRequestError
 import eu.europa.ec.eudi.documentretrieval.Consensus
+import eu.europa.ec.eudi.documentretrieval.Resolution
 import eu.europa.ec.eudi.documentretrieval.ResolvedRequestObject
 import eu.europa.ec.eudi.documentretrieval.ResponseMode
 import java.io.Serializable
