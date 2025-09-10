@@ -22,6 +22,6 @@ fun interface CreateSignedDocuments {
      * @param signatures the signatures
      */
     suspend fun createSignedDocuments(
-        signatures: List<Signature>
+        signatures: List<Signature>,
     )
 }

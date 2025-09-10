@@ -66,7 +66,7 @@ internal class AuthorizeCredentialImpl(
             is CredentialInfoTO.Success -> {
                 credentialInfoTO.toDomain(credentialID)
             }
-            else ->  error("Unexpected response: $credentialInfoTO")
+            else -> error("Unexpected response: $credentialInfoTO")
         }
     }
 
@@ -94,17 +94,17 @@ internal class AuthorizeCredentialImpl(
                 }
                 credentialAuthorizationSubject.credentialRef.credentialID
             }
-            credentialID != null ->{
-            credentialID
+            credentialID != null -> {
+                credentialID
             }
             credentialAuthorizationRequestType.credentialAuthorizationSubject.credentialRef
-                    is CredentialRef.ByCredentialID -> {
+            is CredentialRef.ByCredentialID -> {
                 (
-                        credentialAuthorizationRequestType.credentialAuthorizationSubject.credentialRef
-                                as CredentialRef.ByCredentialID
-                        ).credentialID
-                    }
-            else ->  error("Credential ID is required")
+                    credentialAuthorizationRequestType.credentialAuthorizationSubject.credentialRef
+                        as CredentialRef.ByCredentialID
+                    ).credentialID
+            }
+            else -> error("Credential ID is required")
         }
 
         val credential = getCredentialInfo(authorizedCredentialID, accessToken)

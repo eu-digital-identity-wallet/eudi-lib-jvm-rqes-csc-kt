@@ -245,13 +245,12 @@ private class TimeChecks(
 
         val exp = claimsSet.expirationTime
         if (exp != null && !DateUtils.isAfter(exp, now, skewInSeconds)) {
-                throw BadJWTException("Expired JWT")
+            throw BadJWTException("Expired JWT")
         }
 
         val nbf = claimsSet.notBeforeTime
         if (nbf != null && !DateUtils.isBefore(nbf, now, skewInSeconds)) {
-                throw BadJWTException("JWT before use time")
-
+            throw BadJWTException("JWT before use time")
         }
     }
 }
