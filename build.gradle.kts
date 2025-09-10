@@ -73,10 +73,15 @@ dependencies {
 spotless {
     kotlin {
         ktlint(libs.versions.ktlint.get())
+        target("**/*.kt")
         licenseHeaderFile("FileHeader.txt")
     }
     kotlinGradle {
         ktlint(libs.versions.ktlint.get())
+    }
+    java {
+        target("**/*.java")
+        licenseHeaderFile("FileHeader.txt")
     }
 }
 
