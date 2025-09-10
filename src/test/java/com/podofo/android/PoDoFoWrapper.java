@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class PoDoFoWrapper {
-    private Logger logger = Logger.getLogger(PoDoFoWrapper.class.getName());
+    private final Logger logger = Logger.getLogger(PoDoFoWrapper.class.getName());
     private final String conformanceLevel;
     private final String hashAlgorithmOID;
     private final String documentInputPath;
