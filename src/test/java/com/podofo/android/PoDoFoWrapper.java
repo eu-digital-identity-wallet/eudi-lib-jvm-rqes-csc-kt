@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * Test-specific version of PoDoFoWrapper that doesn't require native libraries.
- * This version provides mock functionality suitable for unit testing.
- */
 package com.podofo.android;
 
 import java.util.List;
 import java.util.logging.Logger;
 
+/*
+ * Test-specific version of PoDoFoWrapper that doesn't require native libraries.
+ * This version provides mock functionality suitable for unit testing.
+ */
 public class PoDoFoWrapper {
     private final Logger logger = Logger.getLogger(PoDoFoWrapper.class.getName());
     private final String conformanceLevel;
