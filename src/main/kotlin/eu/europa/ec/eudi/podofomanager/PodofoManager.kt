@@ -19,21 +19,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.podofo.android.PoDoFoWrapper
-import eu.europa.ec.eudi.rqes.ConformanceLevel
-import eu.europa.ec.eudi.rqes.CredentialCertificate
-import eu.europa.ec.eudi.rqes.CrlRequest
-import eu.europa.ec.eudi.rqes.Digest
-import eu.europa.ec.eudi.rqes.DocumentDigest
-import eu.europa.ec.eudi.rqes.DocumentDigestList
-import eu.europa.ec.eudi.rqes.DocumentToSign
-import eu.europa.ec.eudi.rqes.HashAlgorithmOID
-import eu.europa.ec.eudi.rqes.OcspRequest
-import eu.europa.ec.eudi.rqes.RevocationServiceImpl
-import eu.europa.ec.eudi.rqes.TimestampRequestTO
-import eu.europa.ec.eudi.rqes.TimestampResponseTO
-import eu.europa.ec.eudi.rqes.TimestampServiceImpl
+import eu.europa.ec.eudi.rqes.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 
 class PodofoManager {
@@ -76,7 +66,7 @@ class PodofoManager {
                     c++
 
                     podofoWrapper.calculateHash()?.let { hash ->
-                        hashes += hash
+                        hashes += URLDecoder.decode(hash, StandardCharsets.UTF_8.toString())
                         podofoSessions = podofoSessions + session
                     } ?: throw IllegalStateException("Failed to calculate hash for document: ${doc.documentInputPath}")
                 } catch (_: Exception) {
