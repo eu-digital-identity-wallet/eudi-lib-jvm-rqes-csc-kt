@@ -41,7 +41,7 @@ class CalculateDocumentHashesTest {
             assertNotNull(documentDigestList)
             assertEquals(1, documentDigestList.documentDigests.size)
             assertEquals(HashAlgorithmOID.SHA_256, documentDigestList.hashAlgorithmOID)
-            assertEquals("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=", documentDigestList.documentDigests[0].hash.value)
+            assertEquals("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=", documentDigestList.documentDigests[0].hash.asBase64())
         }
     }
 }

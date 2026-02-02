@@ -22,8 +22,6 @@ import com.podofo.android.PoDoFoWrapper
 import eu.europa.ec.eudi.rqes.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.time.Instant
 
 class PodofoManager {
@@ -66,7 +64,7 @@ class PodofoManager {
                     c++
 
                     podofoWrapper.calculateHash()?.let { hash ->
-                        hashes += URLDecoder.decode(hash, StandardCharsets.UTF_8.toString())
+                        hashes += hash
                         podofoSessions = podofoSessions + session
                     } ?: throw IllegalStateException("Failed to calculate hash for document: ${doc.documentInputPath}")
                 } catch (_: Exception) {
@@ -78,9 +76,10 @@ class PodofoManager {
                 error("Internal error: got ${hashes.size} hashes for ${documents.size} documents")
             }
 
-            val digestEntries = hashes.mapIndexed { idx, rawHash ->
+            val digestEntries = hashes.mapIndexed { idx, urlEncodedBase64Hash ->
                 DocumentDigest(
-                    hash = Digest(rawHash),
+                    // the hashes produced by podofo are Base64 encoded and then URL encoded
+                    hash = Digest.fromURLEncodedBase64(urlEncodedBase64Hash),
                     label = documents[idx].label,
                 )
             }

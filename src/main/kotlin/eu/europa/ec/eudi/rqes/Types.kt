@@ -19,8 +19,10 @@ import com.nimbusds.oauth2.sdk.`as`.ReadOnlyAuthorizationServerMetadata
 import java.io.File
 import java.net.URI
 import java.net.URL
+import java.net.URLDecoder
 import java.time.Duration
 import java.time.Instant
+import java.util.Base64
 
 @JvmInline
 value class CredentialID(val value: String) {
@@ -52,11 +54,7 @@ sealed interface CredentialRef {
     data class BySignatureQualifier(val signatureQualifier: SignatureQualifier) : CredentialRef
 }
 
-data class DocumentDigest(val hash: Digest, val label: String?) {
-    init {
-        require(hash.value.isNotBlank()) { "Hash must not be blank" }
-    }
-}
+data class DocumentDigest(val hash: Digest, val label: String?)
 
 @JvmInline
 value class HashAlgorithmOID(val value: String) {
@@ -115,9 +113,35 @@ data class DocumentDigestList(
 }
 
 @JvmInline
-value class Digest(val value: String) {
+value class Digest(private val value: String) {
     init {
         require(value.isNotBlank()) { "Digest must not be blank" }
+        try {
+            Base64.getDecoder().decode(value)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Digest must be a valid Base64 encoded string", e)
+        }
+    }
+
+    fun asBase64(): String = value
+
+    fun asBase64URLEncoded(): String =
+        Base64.getUrlEncoder().withoutPadding().encodeToString(raw())
+
+    fun raw(): ByteArray = Base64.getDecoder().decode(value)
+
+    companion object {
+        /**
+         * @param value a value that is Base64 encoded and then URL encoded
+         */
+        fun fromURLEncodedBase64(value: String): Digest {
+            val decoded = URLDecoder.decode(value, Charsets.UTF_8.toString())
+            return Digest(decoded)
+        }
+
+        fun fromBase64(value: String): Digest {
+            return Digest(value)
+        }
     }
 }
 
