@@ -34,36 +34,8 @@ class AuthorizationEndpointClientTest {
         val hash1 = Digest.fromBase64("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=")
         val hash2 = Digest.fromBase64("c1RPZ3dPbSs0NzRnRmowcTB4MWlTTnNwS3FiY3NlNEllaXFsRGcvSFd1ST0=")
 
-        val credentialAuthorizationSubject = CredentialAuthorizationSubject(
-            CredentialRef.ByCredentialID(credentialID),
-            DocumentDigestList(
-                listOf(
-                    DocumentDigest(
-                        hash1,
-                        "sample document 1",
-                    ),
-                    DocumentDigest(
-                        hash2,
-                        "sample document 2",
-                    ),
-                ),
-                HashAlgorithmOID.SHA_256,
-                Instant.now(),
-            ),
-            1,
-        )
-
-        val endpoint = AuthorizationEndpointClient(
-            URI("https://localhost:8084/oauth2/authorize").toURL(),
-            null,
-            CSCClientConfig(
-                client = OAuth2Client.Public("wallet-client-tester"),
-                authFlowRedirectionURI = URI("https://oauthdebugger.com/debug").toURL().toURI(),
-                parUsage = ParUsage.Never,
-                rarUsage = RarUsage.Never,
-            ),
-            mockedKtorHttpClientFactory,
-        )
+        val credentialAuthorizationSubject = credentialAuthorizationSubject(credentialID, listOf(hash1, hash2))
+        val endpoint = authEndpointClient(mockedKtorHttpClientFactory, ParUsage.Never, RarUsage.Never)
 
         // When
         val result = endpoint.submitParOrCreateAuthorizationRequestUrl(
@@ -79,7 +51,6 @@ class AuthorizationEndpointClientTest {
         assertTrue(authUrl.contains(URLEncoder.encode(credentialID.value, Charsets.UTF_8)))
     }
 
-
     @Test
     fun `should prepare credential authorization request without PAR, with RAR`() = runTest {
         // Given
@@ -89,36 +60,8 @@ class AuthorizationEndpointClientTest {
         val hash1 = Digest.fromBase64("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=")
         val hash2 = Digest.fromBase64("c1RPZ3dPbSs0NzRnRmowcTB4MWlTTnNwS3FiY3NlNEllaXFsRGcvSFd1ST0=")
 
-        val credentialAuthorizationSubject = CredentialAuthorizationSubject(
-            CredentialRef.ByCredentialID(credentialID),
-            DocumentDigestList(
-                listOf(
-                    DocumentDigest(
-                        hash1,
-                        "sample document 1",
-                    ),
-                    DocumentDigest(
-                        hash2,
-                        "sample document 2",
-                    ),
-                ),
-                HashAlgorithmOID.SHA_256,
-                Instant.now(),
-            ),
-            1,
-        )
-
-        val endpoint = AuthorizationEndpointClient(
-            URI("https://localhost:8084/oauth2/authorize").toURL(),
-            null,
-            CSCClientConfig(
-                client = OAuth2Client.Public("wallet-client-tester"),
-                authFlowRedirectionURI = URI("https://oauthdebugger.com/debug").toURL().toURI(),
-                parUsage = ParUsage.Never,
-                rarUsage = RarUsage.Required,
-            ),
-            mockedKtorHttpClientFactory,
-        )
+        val credentialAuthorizationSubject = credentialAuthorizationSubject(credentialID, listOf(hash1, hash2))
+        val endpoint = authEndpointClient(mockedKtorHttpClientFactory, ParUsage.Never, RarUsage.Required)
 
         // When
         val result = endpoint.submitParOrCreateAuthorizationRequestUrl(
@@ -130,7 +73,38 @@ class AuthorizationEndpointClientTest {
         val authUrl = result.second.value.toString()
         // Assert
         assertTrue(authUrl.startsWith("https://localhost:8084/oauth2/authorize"))
-        assertTrue(authUrl.contains(hash1.asBase64()))
+        assertTrue(authUrl.contains(URLEncoder.encode(hash2.asBase64(), Charsets.UTF_8)))
         assertTrue(authUrl.contains(URLEncoder.encode(credentialID.value, Charsets.UTF_8)))
     }
+
+    private fun authEndpointClient(
+        clientFactory: KtorHttpClientFactory,
+        parUsage: ParUsage,
+        rarUsage: RarUsage,
+    ) = AuthorizationEndpointClient(
+        URI("https://localhost:8084/oauth2/authorize").toURL(),
+        null,
+        CSCClientConfig(
+            client = OAuth2Client.Public("wallet-client-tester"),
+            authFlowRedirectionURI = URI("https://oauthdebugger.com/debug").toURL().toURI(),
+            parUsage = parUsage,
+            rarUsage = rarUsage,
+        ),
+        clientFactory,
+    )
+
+    private fun credentialAuthorizationSubject(credentialID: CredentialID, hashes: List<Digest>) = CredentialAuthorizationSubject(
+        CredentialRef.ByCredentialID(credentialID),
+        DocumentDigestList(
+            hashes.mapIndexed { index, hash ->
+                DocumentDigest(
+                    hash = hash,
+                    label = "sample document ${index + 1}",
+                )
+            },
+            HashAlgorithmOID.SHA_256,
+            Instant.now(),
+        ),
+        1,
+    )
 }
