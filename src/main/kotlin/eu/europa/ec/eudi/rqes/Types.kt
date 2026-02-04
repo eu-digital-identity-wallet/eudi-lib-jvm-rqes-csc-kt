@@ -22,7 +22,7 @@ import java.net.URL
 import java.net.URLDecoder
 import java.time.Duration
 import java.time.Instant
-import java.util.Base64
+import java.util.*
 
 @JvmInline
 value class CredentialID(val value: String) {
@@ -112,36 +112,42 @@ data class DocumentDigestList(
     }
 }
 
-@JvmInline
-value class Digest(private val value: String) {
-    init {
-        require(value.isNotBlank()) { "Digest must not be blank" }
-        try {
-            Base64.getDecoder().decode(value)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("Digest must be a valid Base64 encoded string", e)
+sealed interface Digest {
+
+    val value: String
+
+    fun raw(): ByteArray
+    fun asBase64(): String
+    fun asBase64URLEncoded(): String
+
+    data class Base64Digest(override val value: String) : Digest {
+        init {
+            require(value.isNotBlank()) { "Digest must not be blank" }
+            try {
+                Base64.getDecoder().decode(value)
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("Digest must be a valid Base64 encoded string", e)
+            }
         }
+
+        override fun raw(): ByteArray = Base64.getDecoder().decode(value)
+        override fun asBase64(): String = value
+        override fun asBase64URLEncoded(): String = Base64.getUrlEncoder().withoutPadding().encodeToString(raw())
     }
 
-    fun asBase64(): String = value
-
-    fun asBase64URLEncoded(): String =
-        Base64.getUrlEncoder().withoutPadding().encodeToString(raw())
-
-    fun raw(): ByteArray = Base64.getDecoder().decode(value)
-
-    companion object {
-        /**
-         * @param value a value that is Base64 encoded and then URL encoded
-         */
-        fun fromURLEncodedBase64(value: String): Digest {
-            val decoded = URLDecoder.decode(value, Charsets.UTF_8.toString())
-            return Digest(decoded)
+    data class URLEncodedBase64Digest(override val value: String) : Digest {
+        init {
+            require(value.isNotBlank()) { "Digest must not be blank" }
+            try {
+                Base64.getDecoder().decode(URLDecoder.decode(value, Charsets.UTF_8.toString()))
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("Digest must be a valid Base64 encoded string", e)
+            }
         }
 
-        fun fromBase64(value: String): Digest {
-            return Digest(value)
-        }
+        override fun raw(): ByteArray = Base64.getDecoder().decode(URLDecoder.decode(value, Charsets.UTF_8.toString()))
+        override fun asBase64(): String = URLDecoder.decode(value, Charsets.UTF_8.toString())
+        override fun asBase64URLEncoded(): String = Base64.getUrlEncoder().withoutPadding().encodeToString(raw())
     }
 }
 

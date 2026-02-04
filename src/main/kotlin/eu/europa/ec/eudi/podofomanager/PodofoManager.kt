@@ -79,7 +79,7 @@ class PodofoManager {
             val digestEntries = hashes.mapIndexed { idx, urlEncodedBase64Hash ->
                 DocumentDigest(
                     // the hashes produced by podofo are Base64 encoded and then URL encoded
-                    hash = Digest.fromURLEncodedBase64(urlEncodedBase64Hash),
+                    hash = Digest.URLEncodedBase64Digest(urlEncodedBase64Hash),
                     label = documents[idx].label,
                 )
             }

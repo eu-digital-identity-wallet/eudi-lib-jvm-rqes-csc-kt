@@ -31,8 +31,8 @@ class AuthorizationEndpointClientTest {
         val mockedKtorHttpClientFactory = mockedKtorHttpClientFactory()
 
         val credentialID = CredentialID("83c7c559-db74-48da-aacc-d439d415cb81")
-        val hash1 = Digest.fromBase64("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=")
-        val hash2 = Digest.fromBase64("c1RPZ3dPbSs0NzRnRmowcTB4MWlTTnNwS3FiY3NlNEllaXFsRGcvSFd1ST0=")
+        val hash1 = Digest.Base64Digest("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=")
+        val hash2 = Digest.Base64Digest("c1RPZ3dPbSs0NzRnRmowcTB4MWlTTnNwS3FiY3NlNEllaXFsRGcvSFd1ST0=")
 
         val credentialAuthorizationSubject = credentialAuthorizationSubject(credentialID, listOf(hash1, hash2))
         val endpoint = authEndpointClient(mockedKtorHttpClientFactory, ParUsage.Never, RarUsage.Never)
@@ -57,8 +57,8 @@ class AuthorizationEndpointClientTest {
         val mockedKtorHttpClientFactory = mockedKtorHttpClientFactory()
 
         val credentialID = CredentialID("83c7c559-db74-48da-aacc-d439d415cb81")
-        val hash1 = Digest.fromBase64("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=")
-        val hash2 = Digest.fromBase64("c1RPZ3dPbSs0NzRnRmowcTB4MWlTTnNwS3FiY3NlNEllaXFsRGcvSFd1ST0=")
+        val hash1 = Digest.Base64Digest("sTOgwOm+474gFj0q0x1iSNspKqbcse4IeiqlDg/HWuI=")
+        val hash2 = Digest.Base64Digest("c1RPZ3dPbSs0NzRnRmowcTB4MWlTTnNwS3FiY3NlNEllaXFsRGcvSFd1ST0=")
 
         val credentialAuthorizationSubject = credentialAuthorizationSubject(credentialID, listOf(hash1, hash2))
         val endpoint = authEndpointClient(mockedKtorHttpClientFactory, ParUsage.Never, RarUsage.Required)
