@@ -123,6 +123,7 @@ sealed interface Digest {
     data class Base64Digest(override val value: String) : Digest {
         init {
             require(value.isNotBlank()) { "Digest must not be blank" }
+            require(value.isBase64encoded()) { "Digest must be a valid Base64 encoded string" }
             try {
                 Base64.getDecoder().decode(value)
             } catch (e: IllegalArgumentException) {
@@ -138,16 +139,23 @@ sealed interface Digest {
     data class URLEncodedBase64Digest(override val value: String) : Digest {
         init {
             require(value.isNotBlank()) { "Digest must not be blank" }
-            try {
-                Base64.getDecoder().decode(URLDecoder.decode(value, Charsets.UTF_8.toString()))
-            } catch (e: IllegalArgumentException) {
-                throw IllegalArgumentException("Digest must be a valid Base64 encoded string", e)
+            require(URLDecoder.decode(value, Charsets.UTF_8.toString()).isBase64encoded()) {
+                "Digest must be a valid Base64 encoded string"
             }
         }
 
         override fun raw(): ByteArray = Base64.getDecoder().decode(URLDecoder.decode(value, Charsets.UTF_8.toString()))
         override fun asBase64(): String = URLDecoder.decode(value, Charsets.UTF_8.toString())
         override fun asBase64URLEncoded(): String = Base64.getUrlEncoder().withoutPadding().encodeToString(raw())
+    }
+
+    fun String.isBase64encoded(): Boolean {
+        try {
+            Base64.getDecoder().decode(this)
+            return true
+        } catch (_: IllegalArgumentException) {
+            return false
+        }
     }
 }
 
