@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 European Commission
+ * Copyright (c) 2024-2026 European Commission
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,13 @@ internal class SignDocImpl(
         documents: List<DocumentToSign>,
         documentDigestList: DocumentDigestList,
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String?,
     ): Result<SignDocResponse> = signDocument(
         credentialID,
         documents,
         documentDigestList,
         signingAlgorithmOID,
+        signingAlgorithmParams,
         tokens.accessToken,
         credentialCertificate,
     )
@@ -38,11 +40,13 @@ internal class SignDocImpl(
     override suspend fun CredentialAuthorized.SCAL2.signDoc(
         documents: List<DocumentToSign>,
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String?,
     ): Result<SignDocResponse> = signDocument(
         credentialID,
         documents,
         documentDigestList,
         signingAlgorithmOID,
+        signingAlgorithmParams,
         tokens.accessToken,
         credentialCertificate,
     )
@@ -53,6 +57,7 @@ internal class SignDocImpl(
         documents: List<DocumentToSign>,
         documentDigestList: DocumentDigestList,
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String?,
         accessToken: AccessToken,
         credentialCertificate: CredentialCertificate,
     ): Result<SignDocResponse> = runCatching {

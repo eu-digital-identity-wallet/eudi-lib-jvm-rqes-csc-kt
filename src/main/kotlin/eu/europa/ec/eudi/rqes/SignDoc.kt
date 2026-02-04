@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 European Commission
+ * Copyright (c) 2024-2026 European Commission
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,12 @@ interface SignDoc {
         documents: List<DocumentToSign>,
         documentDigestList: DocumentDigestList,
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String? = null,
     ): Result<SignDocResponse>
 
     suspend fun CredentialAuthorized.SCAL2.signDoc(
         documents: List<DocumentToSign>,
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String? = null,
     ): Result<SignDocResponse>
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 European Commission
+ * Copyright (c) 2024-2026 European Commission
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ sealed interface Consensus : Serializable {
      *  respond to the request
      */
     data class Positive(
-        val documentWithSignature: List<String>?,
+        val documentWithSignature: List<ByteArray>?,
         val signatureObject: List<String>?,
     ) : Consensus {
         init {

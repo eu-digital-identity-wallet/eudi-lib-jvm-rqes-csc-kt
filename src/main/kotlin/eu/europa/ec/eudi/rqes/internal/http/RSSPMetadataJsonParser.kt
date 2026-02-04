@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 European Commission
+ * Copyright (c) 2024-2026 European Commission
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ private data class RSSPMetadataTO(
 @Serializable
 private data class SignAlgorithms(
     @SerialName("algos") @Required val algos: List<String>,
-    @SerialName("algoParams") val algoParams: List<String>? = null,
+    @SerialName("algoParams") val algoParams: List<String?>? = null,
 )
 
 @Serializable

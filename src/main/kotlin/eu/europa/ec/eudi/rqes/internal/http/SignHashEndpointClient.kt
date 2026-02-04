@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 European Commission
+ * Copyright (c) 2024-2026 European Commission
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ internal data class SignHashRequestTO(
     @SerialName("hashes") val hashes: List<String>,
     @SerialName("hashAlgorithmOID") val hashAlgorithmOID: String,
     @SerialName("signAlgo") val signAlgorithmOID: String,
+    @SerialName("signAlgoParams") val signAlgorithmParams: String?,
     @SerialName("operationMode") val operationMode: String = "S",
 )
 
@@ -63,6 +64,7 @@ internal class SignHashEndpointClient(
         hashes: List<String>,
         hashAlgorithmOID: HashAlgorithmOID,
         signAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String?,
         token: AccessToken,
     ): SignaturesList =
         ktorHttpClientFactory().use { client ->
@@ -75,6 +77,7 @@ internal class SignHashEndpointClient(
                         hashes,
                         hashAlgorithmOID.value,
                         signAlgorithmOID.value,
+                        signingAlgorithmParams,
                     ),
                 )
             }

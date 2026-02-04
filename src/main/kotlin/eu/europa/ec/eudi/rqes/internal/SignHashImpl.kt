@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 European Commission
+ * Copyright (c) 2024-2026 European Commission
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,24 +23,28 @@ internal class SignHashImpl(private val signHashEndpointClient: SignHashEndpoint
     override suspend fun CredentialAuthorized.SCAL1.signHash(
         documentDigestList: DocumentDigestList,
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String?,
     ): Result<SignaturesList> = runCatching {
         signHashEndpointClient.signHashes(
             credentialID,
             documentDigestList.documentDigests.map { it.hash.value },
             documentDigestList.hashAlgorithmOID,
             signingAlgorithmOID,
+            signingAlgorithmParams,
             tokens.accessToken,
         )
     }
 
     override suspend fun CredentialAuthorized.SCAL2.signHash(
         signingAlgorithmOID: SigningAlgorithmOID,
+        signingAlgorithmParams: String?,
     ): Result<SignaturesList> = runCatching {
         signHashEndpointClient.signHashes(
             credentialID,
             documentDigestList.documentDigests.map(DocumentDigest::hash).map { it.value },
             documentDigestList.hashAlgorithmOID,
             signingAlgorithmOID,
+            signingAlgorithmParams,
             tokens.accessToken,
         )
     }
