@@ -20,6 +20,8 @@
     "auth/revoke",
     "credentials/list",
     "credentials/info",
+    "credentials/create",
+    "credentials/delete",
     "credentials/authorize",
     "credentials/authorizeCheck",
     "credentials/getChallenge",
@@ -61,7 +63,7 @@
     ]
   },
   "conformance_levels": [
-    "Ades-B-B",
-    "Ades-B-T"
+    "AdeS-B-B",
+    "AdeS-B-T"
   ]
 }

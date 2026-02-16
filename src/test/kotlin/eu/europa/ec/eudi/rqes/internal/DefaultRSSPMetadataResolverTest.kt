@@ -43,7 +43,16 @@ internal class DefaultRSSPMetadataResolverTest {
         val metaData =
             assertDoesNotThrow { resolver.resolve(SampleRSSP.Id, Locale.forLanguageTag("en-US")).getOrThrow() }
 
+        val oauth2AuthType = metaData.oauth2AuthType()
+        assertNotNull(oauth2AuthType, "OAuth2 auth type should be present")
+
         assertEquals(SampleRSSP.Id, metaData.rsspId)
+        // Verify authorization endpoint URIs
+        assertEquals(
+            "https://auth.domain.org/oauth2/authorize",
+            oauth2AuthType.authorizationServers.elementAt(0).authorizationEndpointURI.toString(),
+            "First server should have correct authorization endpoint"
+        )
     }
 
     @Test
@@ -62,7 +71,17 @@ internal class DefaultRSSPMetadataResolverTest {
         val metaData =
             assertDoesNotThrow { resolver.resolve(SampleRSSP.Id, Locale.forLanguageTag("en-US")).getOrThrow() }
 
+        val oauth2AuthType = metaData.oauth2AuthType()
+        assertNotNull(oauth2AuthType, "OAuth2 auth type should be present")
+
         assertEquals(SampleRSSP.Id, metaData.rsspId)
+        assertEquals(SampleRSSP.Id, metaData.rsspId)
+        // Verify authorization endpoint URIs
+        assertEquals(
+            "https://auth.domain.org/protocol/openid-connect/auth",
+            oauth2AuthType.authorizationServers.elementAt(0).authorizationEndpointURI.toString(),
+            "First server should have correct authorization endpoint"
+        )
     }
 
     @Test
@@ -89,5 +108,29 @@ internal class DefaultRSSPMetadataResolverTest {
 
         assertEquals(2, oauth2AuthType.authorizationServers.size, "Should have 2 authorization servers")
         assertTrue(oauth2AuthType.authorizationServers.first().grantTypes.contains(GrantType.AUTHORIZATION_CODE))
+        
+        // Verify authorization endpoint URIs
+        assertEquals(
+            "https://auth.domain.org/oauth2/authorize",
+            oauth2AuthType.authorizationServers.elementAt(0).authorizationEndpointURI.toString(),
+            "First server should have correct authorization endpoint"
+        )
+        assertEquals(
+            "https://auth.domain.org/protocol/openid-connect/auth",
+            oauth2AuthType.authorizationServers.elementAt(1).authorizationEndpointURI.toString(),
+            "Second server should have correct authorization endpoint"
+        )
+
+        // Verify token endpoint URIs
+        assertEquals(
+            "https://auth.domain.org/oauth2/token",
+            oauth2AuthType.authorizationServers.elementAt(0).tokenEndpointURI.toString(),
+            "First server should have correct authorization endpoint"
+        )
+        assertEquals(
+            "https://auth.domain.org/protocol/openid-connect/token",
+            oauth2AuthType.authorizationServers.elementAt(1).tokenEndpointURI.toString(),
+            "Second server should have correct authorization endpoint"
+        )
     }
 }
