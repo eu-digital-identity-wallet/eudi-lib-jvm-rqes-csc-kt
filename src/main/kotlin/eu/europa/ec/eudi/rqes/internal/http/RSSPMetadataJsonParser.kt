@@ -211,13 +211,3 @@ private fun grantTypesOf(metadata: RSSPMetadataTO): Set<Oauth2Grant> =
             add(Oauth2Grant.ClientCredentials)
         }
     }
-
-private fun grantTypesOfAuthTypes(authTypes: List<String>): Set<Oauth2Grant> =
-    buildSet {
-        if (OAUTH2_CODE in authTypes) {
-            add(Oauth2Grant.AuthorizationCode)
-        }
-        if (OAUTH2_CLIENT in authTypes) {
-            add(Oauth2Grant.ClientCredentials)
-        }
-    }
