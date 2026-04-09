@@ -1,5 +1,4 @@
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
-import org.owasp.dependencycheck.gradle.extension.DependencyCheckExtension
 import java.net.URI
 
 object Meta {
@@ -133,9 +132,10 @@ mavenPublishing {
     }
 }
 
-val nvdApiKey: String? = System.getenv("NVD_API_KEY") ?: properties["nvdApiKey"]?.toString()
-val dependencyCheckExtension = extensions.findByType(DependencyCheckExtension::class.java)
-dependencyCheckExtension?.apply {
+dependencyCheck {
     formats = mutableListOf("XML", "HTML")
-    nvd.apiKey = nvdApiKey ?: ""
+
+    nvd {
+        apiKey = System.getenv("NVD_API_KEY") ?: properties["nvdApiKey"]?.toString() ?: ""
+    }
 }
