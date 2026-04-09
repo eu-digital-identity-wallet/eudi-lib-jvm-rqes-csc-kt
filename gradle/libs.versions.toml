@@ -15,7 +15,6 @@ binary-compatibility-validator = "0.18.1"
 uri-kmp = "0.0.21"
 kover = "0.9.8"
 composeBom = "2026.03.00"
-composeCompiler = "1.5.15"
 eudi-podofo = "0.3.1"
 kotlinx-serialization = "1.9.0"
 
