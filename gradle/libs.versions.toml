@@ -16,7 +16,8 @@ uri-kmp = "0.0.21"
 kover = "0.9.8"
 composeBom = "2026.03.00"
 composeCompiler = "1.5.15"
-eudi-podofo="0.3.1"
+eudi-podofo = "0.3.1"
+kotlinx-serialization = "1.9.0"
 
 [libraries]
 nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref = "nimbus-sdk" }
@@ -35,6 +36,7 @@ uri-kmp = { module = "com.eygraber:uri-kmp", version.ref = "uri-kmp" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 eudi-podofo = { module = "eu.europa.ec.eudi:eudi-lib-android-podofo", version.ref = "eudi-podofo" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
