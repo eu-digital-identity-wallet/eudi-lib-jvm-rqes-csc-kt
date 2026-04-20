@@ -30,6 +30,11 @@ android {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
         targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     }
+
+    lint {
+        disable += "UnsafeOptInUsageError"
+        disable += "UnsafeOptInUsageWarning"
+    }
 }
 
 kotlin {
