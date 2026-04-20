@@ -14,7 +14,6 @@ maven-publish = "0.35.0"
 binary-compatibility-validator = "0.18.1"
 uri-kmp = "0.0.21"
 kover = "0.9.8"
-composeBom = "2026.03.00"
 eudi-podofo = "0.3.1"
 kotlinx-serialization = "1.9.0"
 
@@ -32,15 +31,12 @@ ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 uri-kmp = { module = "com.eygraber:uri-kmp", version.ref = "uri-kmp" }
-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 eudi-podofo = { module = "eu.europa.ec.eudi:eudi-lib-android-podofo", version.ref = "eudi-podofo" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 dependency-check = { id = "org.owasp.dependencycheck", version.ref = "dependency-check" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
