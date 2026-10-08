@@ -9,7 +9,6 @@ object Meta {
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.dokka)
     alias(libs.plugins.spotless)
@@ -31,8 +30,9 @@ android {
         targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     }
 
-    buildFeatures {
-        compose = true
+    lint {
+        disable += "UnsafeOptInUsageError"
+        disable += "UnsafeOptInUsageWarning"
     }
 }
 
@@ -52,10 +52,6 @@ dependencies {
     implementation(libs.uri.kmp)
     implementation(libs.eudi.podofo)
     implementation(libs.ktor.client.okhttp)
-
-    // Jetpack Compose Dependencies
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.runtime)
 
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.jsoup)

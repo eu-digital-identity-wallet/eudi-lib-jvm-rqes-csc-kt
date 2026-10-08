@@ -15,17 +15,16 @@
  */
 package eu.europa.ec.eudi.podofomanager
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.podofo.android.PoDoFoWrapper
 import eu.europa.ec.eudi.rqes.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
 class PodofoManager {
-    private var podofoSessions by mutableStateOf<List<PodofoSession>>(emptyList())
+    private val podofoSessions = MutableStateFlow<List<PodofoSession>>(emptyList())
 
     suspend fun calculateDocumentHashes(
         documents: List<DocumentToSign>,
@@ -34,7 +33,7 @@ class PodofoManager {
         tsaUrl: String,
     ): DocumentDigestList {
         try {
-            podofoSessions = emptyList()
+            podofoSessions.value = emptyList()
             val endEntityCertificate = credentialCertificate.rawCertificates.first()
             val certificateChain = credentialCertificate.rawCertificates.drop(1)
 
@@ -65,7 +64,7 @@ class PodofoManager {
 
                     podofoWrapper.calculateHash()?.let { hash ->
                         hashes += hash
-                        podofoSessions = podofoSessions + session
+                        podofoSessions.update { it + session }
                     } ?: throw IllegalStateException("Failed to calculate hash for document: ${doc.documentInputPath}")
                 } catch (_: Exception) {
                     error("Failed to calculate hash for ${doc.documentOutputPath}")
@@ -99,6 +98,7 @@ class PodofoManager {
         Dispatchers.IO,
     ) {
         try {
+            val podofoSessions = this@PodofoManager.podofoSessions.value
             check(signatures.size == podofoSessions.size) {
                 "Signatures count (${signatures.size}) does not match session count (${podofoSessions.size})"
             }
@@ -133,7 +133,7 @@ class PodofoManager {
                 }
             }
         } finally {
-            podofoSessions = emptyList()
+            podofoSessions.value = emptyList()
         }
     }
 
@@ -346,7 +346,7 @@ class PodofoManager {
 
     private suspend fun fetchCertificateFromUrl(url: String): String {
         val revocationService = RevocationServiceImpl()
-        val request = eu.europa.ec.eudi.rqes.CertificateRequest(certificateUrl = url)
+        val request = CertificateRequest(certificateUrl = url)
         val response = revocationService.getCertificateData(request)
         return response.certificateBase64
     }
