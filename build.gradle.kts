@@ -83,6 +83,7 @@ dokka {
     moduleName = "EUDI rQES CSC library"
 
     dokkaSourceSets.configureEach {
+        suppress.set(name != "androidJvm")
         // contains descriptions for the module and the packages
         includes.from("Module.md")
 
