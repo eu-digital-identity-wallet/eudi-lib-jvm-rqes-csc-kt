@@ -19,7 +19,7 @@ plugins {
 
 android {
     namespace = "eu.europa.ec.eudi.rqes.csc"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
